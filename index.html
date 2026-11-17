@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Electric Car Physics</title>
+<meta name="description" content="An interactive guide to the physics of electric cars, built around the Tesla Model Y: forces, energy, motors, batteries, charging, aerodynamics, tyres and thermal management.">
+<script>
+  // Resolve the theme before first paint (saved choice, else the system setting).
+  (function () {
+    var t = null;
+    try { t = JSON.parse(localStorage.getItem('evp.theme')); } catch (e) {}
+    if (t !== 'light' && t !== 'dark') t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.dataset.theme = t;
+  })();
+</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23131312'/%3E%3Cpath d='M18 4 8 18h7l-2 10 11-15h-7z' fill='%23eda100'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<aside id="nav" aria-label="Chapters">
+  <a class="brand" href="#/home"><i></i><b>Electric Car Physics</b><span>An interactive guide built around the Tesla Model Y</span></a>
+  <nav id="toc"></nav>
+  <div class="nav-foot"><span id="progress-text"></span><div class="bar"><i id="progress-bar"></i></div></div>
+</aside>
+<div class="scrim"></div>
+
+<header id="top">
+  <button class="iconbtn" id="menu" type="button" aria-label="Open chapter list"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <div class="crumb" id="crumb"></div>
+  <span class="lbl">Example car</span>
+  <div id="variant"></div>
+  <button class="iconbtn" id="motion" type="button" aria-label="Pause or play animations"></button>
+  <button class="iconbtn" id="theme" type="button" aria-label="Switch between light and dark theme" title="Light / dark"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg></button>
+</header>
+
+<main id="main" tabindex="-1"><noscript><p style="padding:40px">This guide is interactive and needs JavaScript.</p></noscript></main>
+
+<script src="assets/js/model.js"></script>
+<script src="assets/js/core.js"></script>
+<script src="assets/js/plot.js"></script>
+<script src="assets/js/art.js"></script>
+<script src="assets/js/chapters/00-home.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
