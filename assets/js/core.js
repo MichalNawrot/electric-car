@@ -244,9 +244,13 @@
 
   /* canvas drawing helpers ------------------------------------------------- */
   /** Arrow from (x0,y0) to (x1,y1). */
-  EV.arrow = (ctx, x0, y0, x1, y1, color, w = 3, head = 10) => {
+  EV.arrow = (ctx, x0, y0, x1, y1, color, w = 3, head = 10, halo = false) => {
     const dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy);
     if (len < 1.5) return;
+    if (halo) {   // surface-coloured outline so the arrow stays readable over dark fills
+      const hx = dx / len, hy = dy / len;
+      EV.arrow(ctx, x0, y0, x1 + hx * 2.5, y1 + hy * 2.5, EV.col('surface'), w + 4, head + 5);
+    }
     const ux = dx / len, uy = dy / len, hd = Math.min(head, len * 0.6);
     ctx.save();
     ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = w; ctx.lineCap = 'round';

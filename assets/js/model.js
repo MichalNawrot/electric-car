@@ -119,7 +119,7 @@
 
   /** Motor + inverter losses (W) at shaft torque T (N m, either sign) and speed w (rad/s). */
   function motorLoss(car, T, w) {
-    const cu = car.kc * T * T;
+    const cu = car.kc * T * T * Math.max(1, w * car.tPeak / car.pPeak);   // field weakening needs extra current per unit torque
     const fe = car.kh * w + car.ke * w * w;
     const mech = car.kf * w + car.kw * w * w * w;
     const inv = car.kinv * Math.abs(T * w) + (w > 0.5 || Math.abs(T) > 0.5 ? car.pinv0 : 0);
