@@ -151,7 +151,7 @@
       lUpd(); LC.draw = () => lDraw(0, 0); EV.loop(LC.cv, lDraw);
 
       /* ------------------------------------------------- rotating field ---- */
-      const g = EV.fig(root, 'field', { side: true, title: 'Three currents make one rotating field', hint: 'Left: the three phase currents. Right: the stator from the end, each coil\'s field as a coloured arrow and their sum as the black arrow.',
+      const g = EV.fig(root, 'field', { side: true, title: 'Three currents make one rotating field', hint: 'Left: the three phase currents. Right: the stator from the end, each coil\'s field as a coloured arrow and their sum as the thick arrow.',
         cap: '<b>Try this.</b> Switch off two phases: the field only pulses along one line. Switch on two: it rotates, but lopsidedly. With all three it is a perfect circle. Then swap two phases and watch the direction reverse. That is how the car selects reverse gear.' });
       const FC = EV.canvas(g.stage, { ratio: 0.52, minH: 290, maxH: 400, label: 'Three sinusoidal currents and the rotating magnetic field they produce in the stator' });
       const FR = EV.readouts(g.out, { ang: ['Field direction', '°'], mag: ['Field strength', '× one coil'] });
@@ -176,7 +176,7 @@
         // ---- left: waveforms
         const narrow = w < 520, pw = narrow ? w - 30 : w * 0.5 - 30, px0 = 22, py0 = 24, ph = narrow ? h * 0.3 : h - 62, mid = py0 + ph / 2, amp = ph / 2 - 6;
         ctx.strokeStyle = col('grid'); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(px0, mid); ctx.lineTo(px0 + pw, mid); ctx.stroke();
-        EV.text(ctx, 'phase currents', px0, 14, { size: 11.5, color: col('muted') });
+        EV.text(ctx, 'phase currents', px0 + pw, 14, { size: 11.5, color: col('muted'), align: 'right' });
         PH.forEach(([name, c], i) => {
           if (!on[i]) return;
           ctx.beginPath();
@@ -184,7 +184,7 @@
           ctx.strokeStyle = col(c); ctx.lineWidth = 2; ctx.stroke();
           const x = px0 + pw * th / TAU, y = mid - amp * cur[i];
           ctx.beginPath(); ctx.arc(x, y, 6, 0, TAU); ctx.fillStyle = col('surface'); ctx.fill(); ctx.beginPath(); ctx.arc(x, y, 4, 0, TAU); ctx.fillStyle = col(c); ctx.fill();
-          EV.text(ctx, name, px0 + pw * ((shift[i] / 3 + 0.02) % 1) + 4, mid - amp - 0 + 12 + i * 0, { size: 12, weight: 700, color: col('ink') });
+          EV.text(ctx, name, px0 + pw * (shift[i] / 3) + (shift[i] ? 0 : 6), mid - amp - 6, { size: 12, weight: 700, color: col('ink'), align: shift[i] ? 'center' : 'left' });
         });
         const cxl = px0 + pw * th / TAU;
         ctx.strokeStyle = col('muted'); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cxl, py0); ctx.lineTo(cxl, py0 + ph); ctx.stroke();
@@ -205,8 +205,8 @@
       FC.draw = () => fDraw(0, 0); EV.loop(FC.cv, fDraw);
 
       /* ------------------------------------------------------ rotor types -- */
-      const r = EV.fig(root, 'rotors', { side: true, title: 'Magnet rotor and cage rotor under load', hint: 'The black arrow is the rotating stator field. Add load and see how each rotor responds.',
-        cap: '<b>What to look for.</b> The magnet rotor keeps perfect pace and only falls behind in <em>angle</em>. The cage rotor falls behind in <em>speed</em>: the field keeps overtaking it, and the bars glow where the induced current is largest.' });
+      const r = EV.fig(root, 'rotors', { side: true, title: 'Magnet rotor and cage rotor under load', hint: 'The arrow is the rotating stator field. Add load and see how each rotor responds.',
+        cap: '<b>What to look for.</b> The magnet rotor keeps perfect pace and only falls behind in <em>angle</em>. The cage rotor falls behind in <em>speed</em>: the field keeps overtaking it, and the bars glow where the induced current is largest, in line with the field.' });
       const RC = EV.canvas(r.stage, { ratio: 0.62, minH: 280, maxH: 400, label: 'Rotor following a rotating magnetic field' });
       const RR = EV.readouts(r.out, { ns: ['Field speed', 'rpm'], n: ['Rotor speed', 'rpm'], x: ['Lag', ''], loss: ['Rotor heating, share of power', '%'] });
       const rs = EV.controls(r.ctl, {
@@ -238,7 +238,7 @@
           ctx.beginPath(); ctx.arc(cx, cy, Rr, 0, TAU); ctx.fillStyle = col('surface'); ctx.fill(); ctx.strokeStyle = col('body-line'); ctx.stroke();
           for (let i = 0; i < 16; i++) {
             const a = ra + i * TAU / 16, x = cx + Rr * 0.84 * Math.cos(a), y = cy - Rr * 0.84 * Math.sin(a);
-            const I = Math.sin(a - fa) * rs.load / 100;                   // induced current is largest in bars the field is cutting fastest
+            const I = Math.cos(a - fa) * rs.load / 100;                   // induced voltage is largest where the field through the gap is strongest: on the field axis
             ctx.beginPath(); ctx.arc(x, y, Rr * 0.085, 0, TAU);
             ctx.fillStyle = EV.mix('axis', 's2', clamp(Math.abs(I) * 1.2, 0, 1)); ctx.fill();
           }
@@ -277,7 +277,7 @@
       eUpd();
 
       /* -------------------------------------------------- efficiency map ---- */
-      const m = EV.fig(root, 'effmap', { side: true, title: 'Efficiency map of the motor and inverter', hint: 'Darker means more of the electrical input reaches the shaft. The black line is the torque limit. Place the operating point with the sliders, or hover the map.',
+      const m = EV.fig(root, 'effmap', { side: true, title: 'Efficiency map of the motor and inverter', hint: 'Stronger colour means more of the electrical input reaches the shaft. The solid line is the torque limit. Place the operating point with the sliders, or hover the map.',
         cap: '<b>Try this.</b> Cruise at 50, 100 and 130 km/h on the flat and note where the point sits. Then add a 10% hill at 60 km/h: the point climbs into the island and the efficiency <em>improves</em>, even though the losses grow.' });
       const CLS = [0, 0.75, 0.85, 0.9, 0.93, 0.95, 0.96], NAMES = ['under 75%', '75–85%', '85–90%', '90–93%', '93–95%', '95–96%', 'over 96%'];
       const clsOf = (eta) => { let k = 0; for (let i = 0; i < CLS.length; i++) if (eta >= CLS[i]) k = i; return k; };
