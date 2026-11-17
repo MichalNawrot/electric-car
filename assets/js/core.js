@@ -97,6 +97,7 @@
         if (n === 'sqrt') return `<msqrt>${group()}</msqrt>`;
         if (n === 'text') { const j = src.indexOf('}', i), t = src.slice(i + 1, j); i = j + 1; return `<mtext>${EV.esc(t)}</mtext>`; }
         if (n === 'quad') return '<mspace width="1.2em"></mspace>';
+        if (n === 'left' || n === 'right') return '';
         if (n === ',') return '<mspace width="0.25em"></mspace>';
         if (SYM[n]) return `<mi>${SYM[n]}</mi>`;
         if (FN[n]) return `<mi>${n}</mi>`;
