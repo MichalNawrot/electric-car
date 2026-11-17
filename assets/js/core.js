@@ -95,7 +95,7 @@
         const m = /^\\([A-Za-z]+|.)/.exec(src.slice(i)); i += m[0].length; const n = m[1];
         if (n === 'frac') { const a = group(), b = group(); return `<mfrac>${a}${b}</mfrac>`; }
         if (n === 'sqrt') return `<msqrt>${group()}</msqrt>`;
-        if (n === 'text') { const j = src.indexOf('}', i), t = src.slice(i + 1, j); i = j + 1; return `<mtext>${EV.esc(t)}</mtext>`; }
+        if (n === 'text') { const j = src.indexOf('}', i), t = src.slice(i + 1, j); i = j + 1; return `<mtext>${EV.esc(t).replace(/^ | $/g, ' ')}</mtext>`; }
         if (n === 'quad') return '<mspace width="1.2em"></mspace>';
         if (n === 'left' || n === 'right') return '';
         if (n === ',') return '<mspace width="0.25em"></mspace>';
@@ -291,7 +291,7 @@
         el.classList.toggle('hi', !!r.hi);
         el.children[0].textContent = r.label;
         const f = el.children[1].children[0];
-        f.style.width = `calc(${clamp(r.value / max, 0, 1) * 100}% * 0.78)`;
+        f.style.width = `calc(${clamp(r.value / max, 0, 1) * 100}% * 0.62)`;
         f.style.background = `var(--${r.color || 's1'})`;
         el.children[1].children[1].textContent = r.text != null ? r.text : EV.fmt(r.value, o.dec || 0) + (o.unit ? ' ' + o.unit : '');
       });
