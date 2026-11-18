@@ -268,6 +268,14 @@
     ctx.save();
     ctx.font = `${o.weight || 500} ${o.size || 12}px ${o.mono ? 'ui-monospace, Consolas, monospace' : 'system-ui, "Segoe UI", sans-serif'}`;
     ctx.textAlign = o.align || 'left'; ctx.textBaseline = o.base || 'alphabetic';
+    // Keep the label inside the canvas: nudge it sideways if it would be cut off at either edge (matters on phones).
+    const T = ctx.getTransform(), k = Math.hypot(T.a, T.b);
+    if (k > 0) {
+      const tw = ctx.measureText(s).width, left = x - (o.align === 'right' ? tw : o.align === 'center' ? tw / 2 : 0);
+      const sx = (T.a * left + T.c * y + T.e), W = ctx.canvas.width, pad = 3 * k;
+      if (sx < pad) x += (pad - sx) / T.a * (T.a > 0 ? 1 : 0);
+      else if (sx + tw * k > W - pad) x -= (sx + tw * k - (W - pad)) / k;
+    }
     if (o.halo) { ctx.lineWidth = 4; ctx.lineJoin = 'round'; ctx.strokeStyle = EV.col('surface'); ctx.strokeText(s, x, y); }
     ctx.fillStyle = o.color || EV.col('ink-2');
     ctx.fillText(s, x, y);

@@ -162,13 +162,13 @@
           ctx.beginPath(); ctx.arc(q.x, q.y, Math.min(7, (bot - top) / ROWS * 0.3), 0, TAU); ctx.fillStyle = col('s7'); ctx.fill();
         }
         // labels
-        EV.text(ctx, 'Anode: graphite', (xa0 + xa1) / 2, bot + 24, { size: 12, weight: 600, align: 'center', color: col('ink') });
-        EV.text(ctx, `Cathode: ${car.chem === 'LFP' ? 'iron phosphate' : 'nickel oxide'}`, (xc0 + xc1) / 2, bot + 24, { size: 12, weight: 600, align: 'center', color: col('ink') });
-        EV.text(ctx, 'separator', w / 2, bot + 24, { size: 11, align: 'center', color: col('muted') });
+        EV.text(ctx, w < 480 ? 'Anode' : 'Anode: graphite', (xa0 + xa1) / 2, bot + 24, { size: 12, weight: 600, align: 'center', color: col('ink') });
+        EV.text(ctx, w < 480 ? 'Cathode' : `Cathode: ${car.chem === 'LFP' ? 'iron phosphate' : 'nickel oxide'}`, (xc0 + xc1) / 2, bot + 24, { size: 12, weight: 600, align: 'center', color: col('ink') });
+        if (w >= 480) EV.text(ctx, 'separator', w / 2, bot + 24, { size: 11, align: 'center', color: col('muted') });
         EV.text(ctx, '−', xa - 16, wy + 6, { size: 18, weight: 700, align: 'center', color: col('ink') });
         EV.text(ctx, '+', xc + 16, wy + 6, { size: 16, weight: 700, align: 'center', color: col('ink') });
         if (dir) { const x0 = w / 2 - dir * 24, x1 = w / 2 + dir * 24, ya = (top + bot) / 2; EV.arrow(ctx, x0, ya, x1, ya, col('s7'), 2.5, 8); EV.text(ctx, 'Li⁺', w / 2, ya - 9, { size: 11.5, align: 'center', color: col('ink-2'), halo: true }); }
-        if (dir) EV.text(ctx, dir > 0 ? 'electrons →' : '← electrons', w * 0.25, wy - 8, { size: 11.5, align: 'center', color: col('ink-2') });
+        if (dir) EV.text(ctx, dir > 0 ? 'electrons →' : '← electrons', w * (w < 480 ? 0.17 : 0.25), wy - 8, { size: 11.5, align: 'center', color: col('ink-2') });
         const ocv = P.cellOcv(car.chem, soc), I = dir * s.rate * car.cellAh, v = ocv - I * car.cellR;
         if (dt > 0 || t === 0) R({ soc: fmt(soc * 100), v: fmt(v, 2), ocv: fmt(ocv, 2), i: (I > 0 ? '−' : I < 0 ? '+' : '') + fmt(Math.abs(I), car.cellAh > 50 ? 0 : 1) });
         if (soc <= 0 && dir > 0) EV.text(ctx, 'Empty: all the lithium is in the cathode', w / 2, h - 2, { size: 11.5, align: 'center', color: col('ink-2') });

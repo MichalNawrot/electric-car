@@ -131,11 +131,11 @@
         EV.text(ctx, 'weight on the axle', cx + 9, cy - Rw - 16, { size: 11.5, color: col('ink-2') });
         EV.arrow(ctx, cx, cy - Rw - 34, cx, cy - Rw - 3, col('ink-2'), 3, 9);
         EV.text(ctx, 'direction of travel →', w - 10, 18, { size: 11.5, align: 'right', color: col('muted') });
-        EV.text(ctx, 'rubber being squashed', cx + half + 12, gy + 22, { size: 11, color: col('ink-2') });
-        EV.text(ctx, 'rubber relaxing', cx - half - 12, gy + 22, { size: 11, color: col('ink-2'), align: 'right' });
+        EV.text(ctx, w < 480 ? 'squashed' : 'rubber being squashed', cx + half + 12, gy + 22, { size: 11, color: col('ink-2') });
+        EV.text(ctx, w < 480 ? 'relaxing' : 'rubber relaxing', cx - half - 12, gy + 22, { size: 11, color: col('ink-2'), align: 'right' });
         // rolling resistance arrow
         EV.arrow(ctx, cx - Rw - 8, cy, cx - Rw - 30 - crr * 3600, cy, col('s2'), 4, 10);
-        EV.text(ctx, 'rolling resistance', cx - Rw - 36 - crr * 3600, cy + 4, { size: 11.5, weight: 600, align: 'right', color: col('ink') });
+        EV.text(ctx, 'rolling resistance', w < 480 ? cx - Rw - 6 : cx - Rw - 36 - crr * 3600, w < 480 ? cy - 12 : cy + 4, { size: 11.5, weight: 600, align: 'right', color: col('ink') });
       }
       upd();
       C.draw = () => draw(0, 0);
@@ -238,7 +238,7 @@
           EV.arrow(ctx, x, y, x - d.y * rs, y - d.x * rs, col(over ? 's8' : 'ink'), 3, 9);   // force of road on tyre: left turn -> points left
         }
         // ---- g-g diagram
-        const gx = w * 0.76, gy = h * 0.5, gr = Math.min(h * 0.4, w * 0.2), u = gr / 1.3;
+        const gx = w * 0.76, gy = h * 0.5, gr = Math.min(h * 0.4, w * (w < 480 ? 0.155 : 0.2)), u = gr / 1.3;
         ctx.strokeStyle = col('grid'); ctx.lineWidth = 1;
         for (const q of [0.5, 1]) { ctx.beginPath(); ctx.arc(gx, gy, q * u, 0, 7); ctx.stroke(); }
         ctx.beginPath(); ctx.moveTo(gx - gr, gy); ctx.lineTo(gx + gr, gy); ctx.moveTo(gx, gy - gr); ctx.lineTo(gx, gy + gr); ctx.stroke();
@@ -248,7 +248,7 @@
         EV.text(ctx, 'brake', gx, gy + gr + 14, { size: 11, align: 'center', color: col('muted') });
         EV.text(ctx, 'left', gx - gr - 4, gy + 4, { size: 11, align: 'right', color: col('muted') });
         EV.text(ctx, 'right', gx + gr + 4, gy + 4, { size: 11, color: col('muted') });
-        EV.text(ctx, `limit ${fmt(st.mu0, 1)} g`, gx + st.mu0 * u * 0.71 + 4, gy - st.mu0 * u * 0.71 - 4, { size: 11, color: col('ink-2'), halo: true });
+        if (w >= 480) EV.text(ctx, `limit ${fmt(st.mu0, 1)} g`, gx + st.mu0 * u * 0.71 + 4, gy - st.mu0 * u * 0.71 - 4, { size: 11, color: col('ink-2'), halo: true });
         const dx = gx - cs.ay * u, dy = gy - cs.ax * u, over = st.worst > 1.001;
         ctx.strokeStyle = col('muted'); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(dx, dy); ctx.stroke();
         ctx.beginPath(); ctx.arc(dx, dy, 10, 0, 7); ctx.fillStyle = col('surface'); ctx.fill();

@@ -155,7 +155,7 @@
         if (S.Ff > 20) { const L = alen(S.Ff, w); EV.arrow(ctx, front, 46, front - L, 46, col('s8'), 5, 12); lab(`brakes ${fmt(S.Ff)} N`, front + 8, 50, 'left'); }
         ctx.restore();
         // power-flow strip
-        const names = ['Battery', 'Inverter', 'Motor', 'Wheels'], bw = Math.min(82, w * 0.115), by = 12, bh = 40, gp = Math.min(40, w * 0.045), dirn = Math.abs(S.d.Pw) > 300 ? Math.sign(S.d.Pw) : 0;
+        const names = ['Battery', 'Inverter', 'Motor', 'Wheels'], gp = w < 480 ? 10 : Math.min(40, w * 0.045), bw = w < 480 ? (w - 24 - 3 * gp) / 4 : Math.min(82, w * 0.115), by = 12, bh = 40, dirn = Math.abs(S.d.Pw) > 300 ? Math.sign(S.d.Pw) : 0;
         for (let i = 0; i < 3; i++) {
           const xa = 12 + bw + i * (bw + gp), y = by + bh / 2;
           ctx.strokeStyle = col('axis'); ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(xa + 3, y); ctx.lineTo(xa + gp - 3, y); ctx.stroke();
@@ -166,14 +166,14 @@
           EV.rr(ctx, x, by, bw, bh, 8); ctx.fillStyle = col('surface'); ctx.fill();
           if (i === 0) { ctx.save(); EV.rr(ctx, x, by, bw, bh, 8); ctx.clip(); ctx.fillStyle = EV.rgba(S.soc > 0.15 ? 's1' : 's8', 0.3); ctx.fillRect(x, by, bw * S.soc, bh); ctx.restore(); }
           EV.rr(ctx, x, by, bw, bh, 8); ctx.strokeStyle = col(i === 0 ? 's1' : 'body-line'); ctx.lineWidth = 1.5; ctx.stroke();
-          EV.text(ctx, i === 0 ? `Battery ${fmt(S.soc * 100)}%` : nm, x + bw / 2, by + 17, { size: 11.5, weight: 600, align: 'center', color: col('ink') });
+          EV.text(ctx, i === 0 ? `${w < 480 ? 'Batt.' : 'Battery'} ${fmt(S.soc * 100)}%` : nm, x + bw / 2, by + 17, { size: w < 480 ? 10.5 : 11.5, weight: 600, align: 'center', color: col('ink') });
           const val = [S.pB, S.d.Pel, S.d.Pm, S.d.Pw][i] / 1000;
           EV.text(ctx, `${fmt(val, Math.abs(val) < 20 ? 1 : 0)} kW`, x + bw / 2, by + 32, { size: 11, align: 'center', mono: true, color: col('ink-2') });
         });
         // slope and mini-map
         EV.text(ctx, `${S.grade > 0.002 ? 'uphill' : S.grade < -0.002 ? 'downhill' : 'level'} ${fmt(Math.abs((S.grade || 0) * 100), 1)}%`, w - 12, h - 10, { size: 11.5, align: 'right', color: col('muted') });
         if (s.route === 'hills' || s.route === 'pass') {
-          const mw = Math.min(200, w * 0.3), mh = 46, mx = w - mw - 12, my = 12, span = s.route === 'pass' ? 18000 : 8000, hs = s.route === 'pass' ? 600 : 60;
+          const mw = Math.min(200, w * 0.3), mh = 46, mx = w - mw - 12, my = w < 480 ? 64 : 12, span = s.route === 'pass' ? 18000 : 8000, hs = s.route === 'pass' ? 600 : 60;
           ctx.fillStyle = col('surface'); EV.rr(ctx, mx - 4, my - 4, mw + 8, mh + 20, 6); ctx.fill();
           ctx.beginPath();
           for (let i = 0; i <= 60; i++) { const xx = S.x - span * 0.3 + span * i / 60, yy = my + mh - (R0.h(xx) + (s.route === 'pass' ? 0 : 60)) / (s.route === 'pass' ? hs : 120) * mh; if (i) ctx.lineTo(mx + mw * i / 60, yy); else ctx.moveTo(mx, yy); }

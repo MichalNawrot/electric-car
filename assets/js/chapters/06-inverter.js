@@ -194,7 +194,7 @@
           ctx.fillStyle = col(PHC[k]); ctx.beginPath(); ctx.arc(X[k], mY[k], 4, 0, TAU); ctx.fill();
         });
         ctx.fillStyle = col('ink'); ctx.beginPath(); ctx.arc(xn, mid, 4.5, 0, TAU); ctx.fill();
-        EV.text(ctx, 'motor windings', (xm + xn) / 2, mY[0] - 26, { size: 11.5, align: 'center', color: col('muted') });
+        EV.text(ctx, w < 480 ? 'windings' : 'motor windings', (xm + xn) / 2, mY[0] - 26, { size: 11.5, align: 'center', color: col('muted') });
         EV.text(ctx, 'six switches', X[1], yT - 12, { size: 11.5, align: 'center', color: col('muted') });
         // moving charge along the conducting paths
         legs.forEach((s, k) => {
@@ -209,7 +209,7 @@
           }
         });
         // space-vector hexagon
-        const hx = w * 0.825, hy = mid, R = Math.min(h * 0.3, w * 0.115);
+        const hx = w * (w < 480 ? 0.8 : 0.825), hy = mid, R = Math.min(h * 0.3, w * 0.115);
         ctx.strokeStyle = col('grid'); ctx.lineWidth = 1.5; ctx.beginPath();
         for (let i = 0; i <= 6; i++) { const a = i * TAU / 6, x = hx + R * Math.cos(a), y = hy - R * Math.sin(a); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); } ctx.stroke();
         SIX.forEach((st, i) => { const a = i * TAU / 6, on = st.every((s, j) => s === legs[j]);
@@ -218,7 +218,7 @@
         const v = cur, al = v[0] - v[1] / 2 - v[2] / 2, be = Math.sqrt(3) / 2 * (v[1] - v[2]);
         if (Math.hypot(al, be) > 0.05) EV.arrow(ctx, hx, hy, hx + al * R, hy - be * R, col('ink'), 4.5, 12);
         else { ctx.beginPath(); ctx.arc(hx, hy, 6, 0, TAU); ctx.fillStyle = col('ink'); ctx.fill(); EV.text(ctx, 'no field', hx, hy + 22, { size: 11.5, align: 'center', color: col('ink-2') }); }
-        EV.text(ctx, 'field direction', hx, hy - R - 30, { size: 11.5, align: 'center', color: col('muted') });
+        EV.text(ctx, w < 480 ? 'field' : 'field direction', hx, hy - R - 30, { size: 11.5, align: 'center', color: col('muted') });
       }
       bUpd(); BC.draw = () => bDraw(0, 0); EV.loop(BC.cv, bDraw);
 

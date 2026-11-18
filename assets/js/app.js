@@ -87,11 +87,13 @@
     EV.paused = p;
     document.body.classList.toggle('paused', p);
     motionBtn.setAttribute('aria-pressed', String(p));
-    motionBtn.title = p ? 'Animations paused — click to play' : 'Pause all animations';
+    motionBtn.title = p ? 'Animations paused: press to play' : 'Pause all animations';
+    $('#motion-note').hidden = !p;
     motionBtn.innerHTML = p ? '<svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg>' : '<svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>';
   };
-  motionBtn.addEventListener('click', () => setPaused(!EV.paused));
-  setPaused(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  motionBtn.addEventListener('click', () => { setPaused(!EV.paused); EV.store.set('paused', EV.paused); });
+  // Start paused if the system asks for reduced motion, unless the reader has chosen otherwise before.
+  setPaused(EV.store.get('paused', window.matchMedia('(prefers-reduced-motion: reduce)').matches));
   $('#menu').addEventListener('click', () => document.body.classList.toggle('nav-open'));
   $('.scrim').addEventListener('click', () => document.body.classList.remove('nav-open'));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') document.body.classList.remove('nav-open'); });

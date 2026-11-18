@@ -159,15 +159,15 @@
         EV.text(ctx, 'evaporator', x0 - 24, y0 - 6, { size: 11.5, weight: 600, align: 'right', color: col('ink') });
         EV.text(ctx, 'condenser', x1 + 24, y0 - 6, { size: 11.5, weight: 600, color: col('ink') });
         if (hp) {
-          EV.text(ctx, 'hot gas', (w / 2 + x1) / 2, y1 + 22, { size: 11, align: 'center', color: col('ink-2') });
-          EV.text(ctx, 'warm liquid', (w / 2 + x1) / 2 + 10, y0 + 20, { size: 11, align: 'center', color: col('ink-2') });
-          EV.text(ctx, `cold mist ${fmt(tEv)} °C`, (w / 2 + x0) / 2 + 6, y0 + 20, { size: 11, align: 'center', color: col('ink-2') });
-          EV.text(ctx, 'cool gas', (w / 2 + x0) / 2, y1 + 22, { size: 11, align: 'center', color: col('ink-2') });
+          if (w >= 480) EV.text(ctx, 'hot gas', (w / 2 + x1) / 2, y1 + 22, { size: 11, align: 'center', color: col('ink-2') });
+          if (w >= 480) EV.text(ctx, 'warm liquid', (w / 2 + x1) / 2 + 10, y0 + 20, { size: 11, align: 'center', color: col('ink-2') });
+          if (w >= 480) EV.text(ctx, `cold mist ${fmt(tEv)} °C`, (w / 2 + x0) / 2 + 6, y0 + 20, { size: 11, align: 'center', color: col('ink-2') });
+          if (w >= 480) EV.text(ctx, 'cool gas', (w / 2 + x0) / 2, y1 + 22, { size: 11, align: 'center', color: col('ink-2') });
           // heat in from outside, heat out to cabin, work in at the compressor
           const free = (st.c.q - st.el) / 1000, q = st.c.q / 1000, k = Math.min(18, (x0 - 50) / 5);
           for (let i = 0; i < 3; i++) { const y = y0 + (y1 - y0) * (0.28 + i * 0.22), ph = (t * 0.6 + i * 0.3) % 1; EV.arrow(ctx, x0 - 34 - free * k + ph * 6, y, x0 - 22 + ph * 6, y, col('s2'), 4, 10); EV.arrow(ctx, x1 + 22 + ph * 6, y, x1 + 34 + q * k + ph * 6, y, col('s2'), 4, 10); }
-          EV.text(ctx, `${fmt(free, 1)} kW from the air`, 20, y1 + 4, { size: 12, weight: 600, color: col('ink') });
-          EV.text(ctx, `${fmt(q, 1)} kW into the cabin`, w - 20, y1 + 4, { size: 12, weight: 600, align: 'right', color: col('ink') });
+          EV.text(ctx, w < 480 ? `${fmt(free, 1)} kW in` : `${fmt(free, 1)} kW from the air`, 20, w < 480 ? y1 + 30 : y1 + 4, { size: 12, weight: 600, color: col('ink') });
+          EV.text(ctx, w < 480 ? `${fmt(q, 1)} kW out` : `${fmt(q, 1)} kW into the cabin`, w - 20, w < 480 ? y1 + 30 : y1 + 4, { size: 12, weight: 600, align: 'right', color: col('ink') });
           EV.arrow(ctx, comp[0], h - 6, comp[0], comp[1] + 46, col('s1'), 4, 10);
           EV.text(ctx, `${fmt(st.el / 1000, 1)} kW electricity`, comp[0] + 10, h - 8, { size: 12, weight: 600, color: col('ink') });
         } else {

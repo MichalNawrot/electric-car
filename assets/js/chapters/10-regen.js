@@ -121,7 +121,7 @@
         const { ctx, w, h } = QC, col = EV.col; qt += dt;
         ctx.clearRect(0, 0, w, h);
         // ---- power-flow strip
-        const names = ['Battery', 'Inverter', 'Motor', 'Wheels'], bw = Math.min(104, (w - 40) / 4 - 26), by = 20, bh = 50, gap = (w - 40 - 4 * bw) / 3;
+        const names = ['Battery', 'Inverter', 'Motor', 'Wheels'], bw = Math.min(104, (w - 40) / 4 - (w < 480 ? 10 : 26)), by = 20, bh = 50, gap = (w - 40 - 4 * bw) / 3;
         const dirn = Math.sign(q.d.Pw) || 0, pw = Math.abs(q.d.Pel), col2 = dirn >= 0 ? 's1' : 's6';
         for (let i = 0; i < 3; i++) {
           const xa = 20 + bw + i * (bw + gap), xb = xa + gap, y = by + bh / 2;
@@ -152,8 +152,8 @@
         ctx.strokeStyle = col('axis'); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x0, Y(0)); ctx.lineTo(x1, Y(0)); ctx.moveTo(x0, y0); ctx.lineTo(x0, y1); ctx.stroke();
         ctx.setLineDash([4, 4]); ctx.strokeStyle = col('muted'); ctx.lineWidth = 1.2; ctx.beginPath();
         for (let k = 0; k <= vmaxK; k += 4) { const yy = Y(P.roadLoad(car, { v: k / 3.6, mass: m0 }).total); if (k) ctx.lineTo(X(k), yy); else ctx.moveTo(X(k), yy); } ctx.stroke(); ctx.setLineDash([]);
-        EV.text(ctx, 'driving: force forward', X(vmaxK * 0.42), Y(Ftop * 0.62), { size: 11.5, color: col('ink-2') });
-        EV.text(ctx, 'regenerating: force backward', X(vmaxK * 0.56), Y(Fbot * 0.82), { size: 11.5, color: col('ink-2') });
+        EV.text(ctx, w < 480 ? 'driving' : 'driving: force forward', X(vmaxK * 0.42), Y(Ftop * 0.62), { size: 11.5, color: col('ink-2') });
+        EV.text(ctx, w < 480 ? 'regenerating' : 'regenerating: force backward', X(vmaxK * (w < 480 ? 0.66 : 0.56)), Y(Fbot * 0.82), { size: 11.5, color: col('ink-2') });
         EV.text(ctx, 'steady speed', X(vmaxK) - 4, Y(P.roadLoad(car, { v: vmaxK / 3.6, mass: m0 }).total) - 6, { size: 11, align: 'right', color: col('muted') });
         for (let k = 0; k <= vmaxK; k += 50) EV.text(ctx, String(k), X(k), y1 + 14, { size: 11, align: 'center', color: col('muted') });
         EV.text(ctx, 'km/h', x1, y1 + 26, { size: 11, align: 'right', color: col('muted') });
