@@ -4,6 +4,10 @@
   const EV = window.EV, { M, eq, fmt } = EV, P = EV.phys, G = P.G, { clamp } = P;
   const TAU = Math.PI * 2;
 
+  /** Energy that actually ends up stored (or is actually drawn) once the cells' own I²R heat is counted. */
+  const stored = (car, p) => (p > 0 ? p - P.packAtPower(car, 0.6, -p).heat : 0);
+  const drawn = (car, p) => (p > 0 ? p + P.packAtPower(car, 0.6, p).heat : p);
+
   /** Most regenerative force the car will apply at the wheels (N) at speed v, and the battery power that results. */
   function regenForce(car, v, mass, limitW) {
     const cap = (car.drive === 'AWD' ? 0.3 : 0.25) * mass * G * clamp(v / 2, 0, 1);    // stability limit, fades out at walking pace
@@ -22,7 +26,7 @@
       if (o.regen !== false && need > 0) { const r = regenForce(car, v, mass, limitW); Fr = Math.min(need, r.F); pB = Fr > 0 ? Math.max(0, -P.drivetrain(car, -Fr, v).Pel) : 0; }
       const Ff = need - Fr;
       if (i++ % 5 === 0) { out.t.push(t); out.pRegen.push(Fr * v / 1000); out.pFric.push(Ff * v / 1000); out.v.push(v * 3.6); }
-      out.eRoad += Math.min(rl.total, mEff * a) * v * dt; out.eFric += Ff * v * dt; out.eWheel += Fr * v * dt; out.eBatt += pB * dt;
+      out.eRoad += Math.min(rl.total, mEff * a) * v * dt; out.eFric += Ff * v * dt; out.eWheel += Fr * v * dt; out.eBatt += stored(car, pB) * dt;
       out.dist += v * dt; v -= a * dt; t += dt;
     }
     out.t.push(t); out.pRegen.push(0); out.pFric.push(0); out.v.push(0); out.time = t;
@@ -38,11 +42,11 @@
       if (phase < 2 && Lm - d <= v * v / (2 * a) + 0.01) phase = 2;
       const rl = P.roadLoad(car, { v, mass });
       let pB;
-      if (phase === 0) { pB = P.drivetrain(car, mEff * a + rl.total, Math.max(v, 0.3)).Pel; v += a * dt; eTrac += pB * dt; }
-      else if (phase === 1) { pB = P.drivetrain(car, rl.total, v).Pel; eTrac += pB * dt; }
+      if (phase === 0) { pB = drawn(car, P.drivetrain(car, mEff * a + rl.total, Math.max(v, 0.3)).Pel); v += a * dt; eTrac += pB * dt; }
+      else if (phase === 1) { pB = drawn(car, P.drivetrain(car, rl.total, v).Pel); eTrac += pB * dt; }
       else {
         const need = Math.max(0, mEff * a - rl.total); let got = 0;
-        if (regen && need > 0) { const r = regenForce(car, v, mass, car.regenMax), Fr = Math.min(need, r.F); got = Fr > 0 ? Math.max(0, -P.drivetrain(car, -Fr, v).Pel) : 0; }
+        if (regen && need > 0) { const r = regenForce(car, v, mass, car.regenMax), Fr = Math.min(need, r.F); got = Fr > 0 ? stored(car, Math.max(0, -P.drivetrain(car, -Fr, v).Pel)) : 0; }
         pB = -got; eBack += got * dt; v = Math.max(0, v - a * dt);
         if (v <= 0) { d = Lm; }
       }
@@ -77,7 +81,7 @@
       <p>At 100 km/h the ${car.name} carries ${fmt(ke(100))} Wh of kinetic energy. During a gentle stop it is shared out like this:</p>
       <ol>
         <li><strong>Air and tyres</strong> keep taking their force for as long as the car is moving. The gentler the stop, the longer it lasts and the more they take. This energy is not wasted: it is distance covered without drawing on the battery.</li>
-        <li>What remains reaches the motors as mechanical power. <strong>Gearbox, motor and inverter</strong> lose a few percent of it.</li>
+        <li>What remains reaches the motors as mechanical power. <strong>Gearbox, motor, inverter and the cells themselves</strong> each turn a few percent of it into heat.</li>
         <li>The rest is <strong>stored</strong>. In the example stop from 100 km/h at 0.2 g that is ${fmt(s100.eBatt / 3600)} Wh, ${fmt(s100.eBatt / s100.e0 * 100)}% of the kinetic energy.</li>
         <li>If the stop is too hard for regeneration alone, the <strong>friction brakes</strong> take the excess as heat.</li>
       </ol>
@@ -155,7 +159,7 @@
         ctx.setLineDash([4, 4]); ctx.strokeStyle = col('muted'); ctx.lineWidth = 1.2; ctx.beginPath();
         for (let k = 0; k <= vmaxK; k += 4) { const yy = Y(P.roadLoad(car, { v: k / 3.6, mass: m0 }).total); if (k) ctx.lineTo(X(k), yy); else ctx.moveTo(X(k), yy); } ctx.stroke(); ctx.setLineDash([]);
         EV.text(ctx, 'driving: force forward', X(vmaxK * 0.42), Y(Ftop * 0.62), { size: 11.5, color: col('ink-2') });
-        EV.text(ctx, 'regenerating: force backward', X(vmaxK * 0.42), Y(Fbot * 0.62), { size: 11.5, color: col('ink-2') });
+        EV.text(ctx, 'regenerating: force backward', X(vmaxK * 0.56), Y(Fbot * 0.82), { size: 11.5, color: col('ink-2') });
         EV.text(ctx, 'steady speed', X(vmaxK) - 4, Y(P.roadLoad(car, { v: vmaxK / 3.6, mass: m0 }).total) - 6, { size: 11, align: 'right', color: col('muted') });
         for (let k = 0; k <= vmaxK; k += 50) EV.text(ctx, String(k), X(k), y1 + 14, { size: 11, align: 'center', color: col('muted') });
         EV.text(ctx, 'km/h', x1, y1 + 26, { size: 11, align: 'right', color: col('muted') });
@@ -184,9 +188,9 @@
         const lim = ss.lim === 'n' ? car.regenMax : 15e3, r = stop(car, ss.v / 3.6, ss.a * G, { limit: lim });
         sp.set({
           xMax: r.time,
-          series: [{ name: 'Friction brakes', color: 's8', stack: true, pts: r.t.map((t, i) => [t, r.pFric[i]]) }, { name: 'Regeneration', color: 's6', stack: true, pts: r.t.map((t, i) => [t, r.pRegen[i]]) }],
+          series: [{ name: 'Regeneration', color: 's6', stack: true, pts: r.t.map((t, i) => [t, r.pRegen[i]]) }, { name: 'Friction brakes', color: 's8', stack: true, pts: r.t.map((t, i) => [t, r.pFric[i]]) }],
         });
-        sb([{ label: 'Friction brakes', value: r.eFric / 3600, color: 's8' }, { label: 'Returned to battery', value: r.eBatt / 3600, color: 's6' }, { label: 'Air and tyres', value: r.eRoad / 3600, color: 's1' }, { label: 'Drivetrain losses', value: (r.eWheel - r.eBatt) / 3600, color: 's5' }], `${fmt(r.e0 / 3600)} Wh`);
+        sb([{ label: 'Friction brakes', value: r.eFric / 3600, color: 's8' }, { label: 'Stored in the battery', value: r.eBatt / 3600, color: 's6' }, { label: 'Air and tyres', value: r.eRoad / 3600, color: 's1' }, { label: 'Drivetrain and battery heat', value: (r.eWheel - r.eBatt) / 3600, color: 's5' }], `${fmt(r.e0 / 3600)} Wh`);
         const town = P.consumption(car, { v: 50 / 3.6 }).whkm;
         SR({ ke: fmt(r.e0 / 3600), back: fmt(r.eBatt / 3600), pc: fmt(r.eBatt / r.e0 * 100), km: fmt(Math.round(r.eBatt / 3600 / town * 100) * 10), d: fmt(r.dist), t: fmt(r.time, 1) });
       }
