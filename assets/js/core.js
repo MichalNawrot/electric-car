@@ -111,6 +111,7 @@
     };
     return seq(undefined);
   }
+  EV.tex = tex;
   /** Inline maths: EV.M`F = m a` */
   EV.M = (s, ...v) => `<math>${tex(String.raw(s, ...v))}</math>`;
   /** Display equation with an optional "where ..." line of HTML. */
