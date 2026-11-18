@@ -59,7 +59,7 @@
       return `
       <div class="keys"><h4>Key ideas</h4><ul>
         <li>The same motor and inverter work in both directions. Negative torque at positive speed means negative power: energy flows from the wheels to the battery.</li>
-        <li>Regeneration cannot return everything. Air and tyres take their share during the stop, and the drivetrain loses a few percent each way.</li>
+        <li>Regeneration cannot return everything. Air and tyres take their share during the stop, and the drivetrain loses several percent each way.</li>
         <li>Regeneration has a <strong>power ceiling</strong> set by the battery and a <strong>force ceiling</strong> set by stability. Anything above them goes to the friction brakes.</li>
         <li>Braking power is force × speed, so a hard stop from high speed exceeds the ceiling at first and falls under it as the car slows.</li>
         <li>In stop-and-go traffic, regeneration cuts energy use by a quarter or more.</li>
@@ -139,7 +139,7 @@
           const val = [q.d.Pel, q.d.Pel, q.d.Pm, q.d.Pw][i] / 1000;
           EV.text(ctx, `${fmt(val, Math.abs(val) < 20 ? 1 : 0)} kW`, x + bw / 2, by + 40, { size: 11.5, align: 'center', mono: true, color: col('ink-2') });
         });
-        EV.text(ctx, dirn > 0 ? 'energy flows to the wheels →' : dirn < 0 ? '← energy flows back to the battery' : 'coasting: no power flows', w / 2, by + bh + 20, { size: 12, weight: 600, align: 'center', color: col(dirn < 0 ? 's6' : 'ink') });
+        EV.text(ctx, dirn > 0 ? 'energy flows to the wheels →' : dirn < 0 ? '← energy flows back to the battery' : 'coasting: no force at the wheels', w / 2, by + bh + 20, { size: 12, weight: 600, align: 'center', color: col(dirn < 0 ? 's6' : 'ink') });
         // ---- force-speed plane
         const x0 = 50, x1 = w - 16, y0 = by + bh + 40, y1 = h - 28, vmaxK = car.vMax, Ftop = P.tractiveForce(car, 0) * 1.08, Fbot = -0.34 * m0 * G;
         const X = (kmh) => x0 + (x1 - x0) * kmh / vmaxK, Y = (F) => y0 + (y1 - y0) * (Ftop - F) / (Ftop - Fbot);
@@ -221,7 +221,7 @@
       { q: `A ${fmt(car.curb + 75)} kg car brakes at a constant 0.3 g. At which moment is the braking power largest?`, o: ['At the start, when the speed is highest', 'In the middle of the stop', 'Just before it comes to rest', 'It is constant throughout'], a: 0, why: 'Power = force × speed. The force is constant, so power is proportional to speed: greatest at the start and falling linearly to zero.' },
       { q: 'Why is regenerative braking weak right after charging the battery to 100%?', o: ['The motor is too hot', 'A full battery has no room for more charge, so the car limits the charging current', 'The tyres have less grip', 'The inverter is switched off'], a: 1, why: 'Regeneration is charging. A cell at its voltage ceiling cannot accept more current without over-voltage or lithium plating, so the car cuts regeneration and uses the friction brakes instead.' },
       { q: 'In which kind of driving does regeneration save the largest share of energy?', o: ['Steady motorway cruising', 'Stop-and-go city traffic', 'A long gentle climb', 'High-speed driving on a track'], a: 1, why: 'Regeneration recovers kinetic (and potential) energy when slowing down. Steady cruising has no slowing down, so there is nothing to recover; city driving is mostly speeding up and slowing down.' },
-      { q: 'You see a red light 300 m ahead. Which is the most efficient way to deal with it?', o: ['Keep speed, then brake hard at the end', 'Keep speed, then use maximum regeneration', 'Lift early and let the car lose speed gently, coasting where possible', 'Accelerate to get there sooner'], a: 2, why: 'Kinetic energy that carries the car forward directly is used at 100%. Regenerated energy makes a round trip through the drivetrain and returns at 75–80%. Friction braking returns 0%.' },
+      { q: 'You see a red light 300 m ahead. Which is the most efficient way to deal with it?', o: ['Keep speed, then brake hard at the end', 'Keep speed, then use maximum regeneration', 'Lift early and let the car lose speed gently, coasting where possible', 'Accelerate to get there sooner'], a: 2, why: 'Kinetic energy that carries the car forward directly is used at 100%. Regenerated energy makes a round trip through the drivetrain and battery and returns at about 80–85%. Friction braking returns 0%.' },
     ],
   });
 })();

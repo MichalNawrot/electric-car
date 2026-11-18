@@ -76,7 +76,7 @@
       function step(dt) {
         const R0 = ROUTES[s.route], grade = R0.slope(S.x), v = S.v;
         const rl = P.roadLoad(car, { v, grade, mass, tempC: s.temp });
-        const Fmax = Math.min(P.tractiveForce(car, v, S.soc), car.drive === 'AWD' ? car.mu * mass * G : car.mu * mass * G * car.rearStatic / (1 - car.mu * car.cgH / car.wheelbase));
+        const Fmax = P.driveForce(car, v, { mass, soc: S.soc, resist: rl.total }).F;                 // motor limit and grip limit, axle by axle
         let Freq;
         if (s.mode === 'cc') {
           let target = s.cruise / 3.6;
@@ -90,7 +90,7 @@
         } else Freq = s.pedal >= 0 ? s.pedal / 100 * Fmax : s.pedal / 100 * mass * G * 0.95;
         let F, Ff = 0;
         if (Freq >= 0) F = Math.min(Freq, Fmax);
-        else { const rg = P.regenForce(car, v, mass, P.regenLimitW(car, S.soc, s.temp + 12)); const fr = Math.min(-Freq, rg.F); F = -fr; Ff = v > 0.05 ? -Freq - fr : 0; }
+        else { const rg = P.regenForce(car, v, mass, P.regenLimitW(car, S.soc, s.temp + 5)); const fr = Math.min(-Freq, rg.F); F = -fr; Ff = v > 0.05 ? -Freq - fr : 0; }
         let a = (F - Ff - rl.total) / mEff;
         if (v <= 0.02 && a < 0) { a = 0; }
         const d = P.drivetrain(car, F, Math.max(v, 0.01)), cl = P.climate(s.temp), hvac = Math.abs(s.temp - 21) > 4 ? cl.pHeatPump : 0;

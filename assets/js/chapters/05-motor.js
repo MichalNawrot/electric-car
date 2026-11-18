@@ -55,7 +55,7 @@
         <li>Three coils, 120° apart, fed with three currents 120° out of step, make a magnetic field of <strong>constant strength that rotates</strong>.</li>
         <li>A magnet rotor locks onto that field (synchronous motor). A plain conducting rotor is dragged by it with a small slip (induction motor).</li>
         <li>A spinning rotor generates a voltage of its own, the <strong>back-EMF</strong>, that grows with speed. It is why torque is constant at low speed and falls at high speed.</li>
-        <li>The same machine is a generator: push the rotor faster than the field and power flows back.</li>
+        <li>The same machine is a generator: push the rotor ahead of the field (in angle for a magnet rotor, in speed for a cage rotor) and power flows back.</li>
       </ul></div>
 
       <h2><span class="n">5.1</span>The force on a current</h2>
@@ -69,7 +69,7 @@
       <p>A coil carrying current is an electromagnet whose strength follows the current. Feed it alternating current and its field grows, shrinks, reverses, but always along the same line. One coil alone only makes a field that pulses back and forth.</p>
       <p>Now take three coils with their axes 120° apart around a ring, and feed them three alternating currents that peak one after another, a third of a cycle apart. At every instant the three pulsing fields add up to a single field of <em>constant</em> strength, 1.5 times one coil's peak, whose direction turns steadily around the ring. Nothing mechanical moves, yet the magnetic field rotates. This is the <em class="t">rotating magnetic field</em>, the idea Nikola Tesla patented in 1888.</p>
       <div data-fig="field"></div>
-      <p>The field turns once per electrical cycle for each pair of poles. The Model Y's motors are wound with ${POLE_PAIRS} pole pairs, so the mechanical speed is</p>
+      <p>A real stator repeats this pattern several times round its bore. With <em>p</em> pairs of poles the field moves on by one pole pair per electrical cycle, so it needs <em>p</em> cycles to go once round. The Model Y's rear motor has ${POLE_PAIRS} pole pairs, so its mechanical speed is</p>
       ${eq(String.raw`n = \frac{60 \, f}{p}`, '<b>n</b> rotor speed in rpm · <b>f</b> electrical frequency in Hz · <b>p</b> number of pole pairs (' + POLE_PAIRS + ')')}
       <p>At 100 km/h the wheels turn ${fmt(rpm100 / car.gear)} times a minute and the motor, through the ${car.gear}:1 gearbox, ${fmt(rpm100 / 10) * 10} times. The inverter is then producing three-phase current at ${fmt(rpm100 / 60 * POLE_PAIRS)} Hz. Speed is controlled by frequency, torque by the size of the current. Chapter 6 shows how the inverter makes both.</p>
 
@@ -103,14 +103,14 @@
       </ul>
       <p>The result is an efficiency that depends on where the motor is working. Engineers draw it as a map over speed and torque, with a broad island of high efficiency in the middle.</p>
       <div data-fig="effmap"></div>
-      <div class="callout y"><h5>Reading the map</h5><p>Cruising sits low on the map, at small torque, where fixed losses (iron, bearings) are a visible share of a small output. Full-throttle launch sits top-left, where copper loss is enormous: the motor may be only 70–80% efficient there, but only for a second or two. The gear ratio is chosen so that everyday driving stays near the island.</p></div>`;
+      <div class="callout y"><h5>Reading the map</h5><p>Cruising sits low on the map, at small torque, where fixed losses (iron, bearings) are a visible share of a small output. Full-throttle launch sits top-left, where copper loss is enormous: the motor may be only 70–80% efficient there, but only for a second or two. Everyday driving never reaches the top of the island, but there the losses are small in absolute terms: a kilowatt or two.</p></div>`;
     },
 
     init(root, car) {
       /* ---------------------------------------------------------- F = BIL -- */
       const f = EV.fig(root, 'lorentz', { side: true, title: 'A wire between two magnet poles', hint: 'You are looking along the wire. A dot means current flowing toward you, a cross means away from you.' });
       const LC = EV.canvas(f.stage, { ratio: 0.5, minH: 220, maxH: 300, label: 'Wire in a magnetic field with a force arrow' });
-      const LR = EV.readouts(f.out, { F: ['Force on the wire', 'N'], T: ['Torque on an 8 cm rotor', 'N·m'] });
+      const LR = EV.readouts(f.out, { F: ['Force on the wire', 'N'], T: ['Torque at 8 cm radius', 'N·m'] });
       const ls = EV.controls(f.ctl, {
         B: { label: 'Magnetic field B', min: 0, max: 1.5, step: 0.05, value: 0.8, unit: 'T' },
         I: { label: 'Current I', min: -600, max: 600, step: 20, value: 300, unit: 'A' },

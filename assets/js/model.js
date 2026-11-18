@@ -188,8 +188,9 @@
       return soc > 0.97 ? p * clamp((1 - soc) / 0.03, 0.08, 1) : p;
     }
     const curve = interp(DC_CURVE[car.key], soc);
-    const tf = interp(DC_TEMP, o.tempC == null ? 30 : o.tempC);
-    return Math.min(curve, o.charger == null ? 250 : o.charger, 250 * tf);
+    let tf = interp(DC_TEMP, o.tempC == null ? 30 : o.tempC);
+    if (car.chem === 'LFP') tf = Math.pow(tf, 1.35);                     // iron phosphate suffers more in the cold
+    return Math.min(curve, o.charger == null ? 250 : o.charger, car.dcPeak * tf);
   }
 
   /** Simulate a charging session. Returns time series and totals. */
@@ -305,6 +306,26 @@
    * Full-throttle run from rest. o: { mu, grade, payload, tempC, soc, tMax, vStop (m/s), gear }
    * Integrates F = m a with motor limits, per-axle grip limits and weight transfer.
    */
+  /**
+   * Force that actually reaches the road at full throttle (N). Each axle is limited separately: by its own
+   * motor's share of the torque and by the grip of its own tyres, whose load shifts with acceleration.
+   * o: { mu, mass, soc, resist (N opposing motion, for the load-transfer estimate) }
+   */
+  function driveForce(car, v, o = {}) {
+    const mass = o.mass || car.curb + 75, mu = o.mu == null ? car.mu : o.mu, mEff = mass * car.rot, resist = o.resist || 0;
+    const w = wOf(car, v);
+    const Fm = w > car.rpmMax * Math.PI / 30 ? 0 : torqueMax(car, w, o.soc) * car.gear * car.etaGear / car.rWheel;
+    let F = Fm, a = (F - resist) / mEff;
+    for (let k = 0; k < 5; k++) {
+      const dFz = mass * a * car.cgH / car.wheelbase;                    // load shifts rearward under acceleration
+      const capR = mu * Math.max(0, mass * G * car.rearStatic + dFz);
+      const capF = mu * Math.max(0, mass * G * (1 - car.rearStatic) - dFz);
+      F = Math.min(Fm * (1 - car.frontShare), capR) + Math.min(Fm * car.frontShare, capF);
+      a = (F - resist) / mEff;
+    }
+    return { F, Fm, a, lim: F < Fm - 1 ? 'grip' : car.tPeak * w < car.pPeak ? 'torque' : 'power' };
+  }
+
   function accelRun(car0, o = {}) {
     const car = o.gear ? Object.assign({}, car0, { gear: o.gear }) : car0;
     const mass = car.curb + (o.payload == null ? 75 : o.payload);
@@ -317,21 +338,9 @@
     let v = 0, x = 0, t = 0, i = 0;
     const want = [[50, 't50'], [100, 't100'], [150, 't150'], [200, 't200']];
     while (t <= tMax) {
-      const w = wOf(car, v);
-      const Fm = torqueMax(car, w, o.soc) * car.gear * car.etaGear / car.rWheel;
       const rl = roadLoad(car, { v, grade: o.grade || 0, mass, tempC: o.tempC });
-      let F = Fm, a = (F - rl.total) / mEff, lim = 'motor';
-      for (let k = 0; k < 5; k++) {
-        const dFz = mass * a * car.cgH / car.wheelbase;                  // load shifts rearward under acceleration
-        const capR = mu * Math.max(0, mass * G * car.rearStatic + dFz);
-        const capF = mu * Math.max(0, mass * G * (1 - car.rearStatic) - dFz);
-        const Fr = Math.min(Fm * (1 - car.frontShare), capR);
-        const Ff = Math.min(Fm * car.frontShare, capF);
-        F = Fr + Ff;
-        a = (F - rl.total) / mEff;
-      }
-      if (F < Fm - 1) lim = 'grip';
-      else lim = car.tPeak * w < car.pPeak ? 'torque' : 'power';
+      const df = driveForce(car, v, { mu, mass, soc: o.soc, resist: rl.total });
+      const F = df.F; let a = df.a, lim = df.lim;
       if (v >= vCap - 0.01) { a = 0; lim = 'vmax'; }
       if (i % 4 === 0) { out.t.push(t); out.v.push(v * 3.6); out.a.push(a / G); out.x.push(x); out.pw.push(F * v / 1000); out.lim.push(lim); }
       for (const [kmh, key] of want) if (out.marks[key] == null && v * 3.6 >= kmh) out.marks[key] = t;
@@ -362,6 +371,6 @@
   EV.phys = {
     G, clamp, lerp, interp, rho, crrTempFactor, roadLoad, wOf, vOf, torqueMax, motorLoss, motorEff, drivetrain,
     OCV, cellOcv, packOcv, packR, packAh, packAtPower, tempRFactor, DC_CURVE, DC_TEMP, chargePower, chargeSession,
-    copHeat, copCool, climate, usableTempFactor, consumption, range, accelRun, tractiveForce, regenForce, regenLimitW,
+    copHeat, copCool, climate, usableTempFactor, consumption, range, accelRun, tractiveForce, driveForce, regenForce, regenLimitW,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

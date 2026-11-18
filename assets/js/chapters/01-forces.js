@@ -5,11 +5,11 @@
 
   EV.chapter({
     id: 'forces', n: '1', title: 'Forces on the road', color: 's1',
-    blurb: 'Four forces decide everything the car does. Learn them and you can estimate range, top speed and hill climbing on a napkin.',
-    lead: 'At every instant four forces act along the road: air drag, rolling resistance, gravity on a slope, and the car\'s own inertia. The motor exists to balance them. Everything else in this guide follows from that balance.',
+    blurb: 'A handful of forces decide everything the car does. Learn them and you can estimate range, top speed and hill climbing on a napkin.',
+    lead: 'At every instant four forces act along the road: the drive force from the tyres, and against it air drag, rolling resistance and gravity on a slope. Whatever is left over changes the car\'s speed. Everything else in this guide follows from that balance.',
     html(car) {
       const m = car.curb + 75, rl = P.roadLoad(car, { v: 120 / 3.6, mass: m });
-      const ke = (kmh) => 0.5 * m * (kmh / 3.6) ** 2;
+      const ke = (kmh) => 0.5 * m * car.rot * (kmh / 3.6) ** 2;      // including the spinning wheels and rotors
       return `
       <div class="keys"><h4>Key ideas</h4><ul>
         <li>Along the road, Newton's second law reads: drive force minus resistance equals mass times acceleration.</li>
@@ -26,15 +26,15 @@
         <li><strong style="color:var(--s1)">■</strong> <strong>Air drag</strong> ${M`\frac{1}{2}\rho C_d A v^2`}. The car must shove about ${fmt(P.rho() * car.area * 100 / 3.6, 0)} kg of air out of its way every second at 100 km/h. Double the speed and the force quadruples.</li>
         <li><strong style="color:var(--s2)">■</strong> <strong>Rolling resistance</strong> ${M`C_{rr} m g`}. Tyres flex as they roll and the rubber does not give all of that energy back. The loss is proportional to the weight they carry: about ${fmt(car.crr * 1000, 1)} N for every 1000 N of weight.</li>
         <li><strong style="color:var(--s3)">■</strong> <strong>Gravity on a slope</strong> ${M`m g \sin\theta`}. On a 5% grade, 5% of the car's weight points back down the road. For a ${fmt(m)} kg car that is ${fmt(m * G * 0.05)} N, more than air drag at motorway speed.</li>
-        <li><strong style="color:var(--s4)">■</strong> <strong>Inertia</strong> ${M`m_{eff} a`}. Not a resistance but the price of changing speed. It is covered in section 1.3.</li>
+        <li><strong style="color:var(--s4)">■</strong> <strong>Inertia</strong> ${M`m_{eff} a`}. Not a force on the car at all, but the price of changing its speed: the net force left over after the other three. It is covered in section 1.3.</li>
       </ul>
       <p>Set the acceleration to zero and what is left is the <em class="t">road load</em>: the force needed just to hold a steady speed. Explore it below. Before you move anything, guess: at what speed does air drag overtake rolling resistance?</p>
 
       <div data-fig="explorer"></div>
 
       <div class="callout ex"><h5>Worked example · ${car.name} at 120 km/h on a flat road</h5>
-        <p>Speed ${M`v = 33.3 \text{ m/s}`}, air density 1.20 kg/m³, drag area ${fmt(car.cd * car.area, 2)} m², mass with driver ${fmt(m)} kg.</p>
-        <p>Air drag ${M`= 0.5 \times 1.20 \times ${fmt(car.cd * car.area, 2)} \times 33.3^2 = ${fmt(rl.aero)} \text{ N}`}. Rolling ${M`= ${car.crr} \times ${m} \times 9.81 = ${fmt(rl.roll)} \text{ N}`}. Total <strong>${fmt(rl.total)} N</strong>, the weight of a ${fmt(rl.total / G)} kg mass. That is all it takes to keep two tonnes moving at motorway speed.</p></div>
+        <p>Speed ${M`v = 33.3 \text{ m/s}`}, air density 1.204 kg/m³, drag area ${fmt(car.cd * car.area, 3)} m², mass with driver ${fmt(m)} kg.</p>
+        <p>Air drag ${M`= 0.5 \times 1.204 \times ${fmt(car.cd * car.area, 3)} \times 33.33^2 = ${fmt(rl.aero)} \text{ N}`}. Rolling ${M`= ${car.crr} \times ${m} \times 9.81 = ${fmt(rl.roll)} \text{ N}`}. Total <strong>${fmt(rl.total)} N</strong>, the weight of a ${fmt(rl.total / G)} kg mass. That is all it takes to keep two tonnes moving at motorway speed.</p></div>
 
       <h2><span class="n">1.2</span>From force to power to energy</h2>
       <p>Force alone does not drain a battery. Force applied <em>over a distance</em> does: that is work, and work per second is power.</p>
@@ -47,7 +47,7 @@
       <p>To change speed the car needs a net force ${M`F = m_{eff} a`}. The effective mass is about 5% higher than the real mass because the wheels and motor rotors must be spun up too. Launching the ${car.name} at 0.5 g takes ${fmt(m * car.rot * 0.5 * G / 1000, 1)} kN, some ${fmt(m * car.rot * 0.5 * G / rl.total)} times the force needed to cruise at 120 km/h.</p>
       <p>The work done by that force is stored as <em class="t">kinetic energy</em>, ${M`E_k = \frac{1}{2} m v^2`}. It is not lost. It is a second, small battery that fills as you speed up and empties as you slow down. A good way to feel its size is to ask how high the same energy would lift the car, since ${M`\frac{1}{2} m v^2 = m g h`} gives ${M`h = v^2 / 2g`} whatever the mass.</p>
       <div data-fig="kinetic"></div>
-      <p>At 130 km/h the car carries ${fmt(ke(130) / 3.6e6, 2)} kWh of kinetic energy, ${fmt(ke(130) / 3.6e6 / car.usable * 100, 1)}% of a full battery. A friction brake turns all of it into heat. Chapter 10 shows how much of it an electric car can take back.</p>
+      <p>At 130 km/h the car carries ${fmt(ke(130) / 3.6e6, 2)} kWh of kinetic energy, counting the spin of its wheels and rotors, ${fmt(ke(130) / 3.6e6 / car.usable * 100, 1)}% of a full battery. A friction brake turns all of it into heat. Chapter 10 shows how much of it an electric car can take back.</p>
 
       <h2><span class="n">1.4</span>Measuring the forces: the coast-down test</h2>
       <p>How does anyone know a car's drag area and rolling resistance? Engineers take it to a long flat track, reach about 130 km/h, select neutral and let it coast. With no drive force the equation of motion becomes</p>

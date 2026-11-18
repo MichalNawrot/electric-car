@@ -13,7 +13,7 @@
   const MODES = {
     cold: { label: 'Cold start', on: ['air_hp', 'dr_hp', 'hp_cab', 'hp_bat'], text: 'Everything is cold. The heat pump pulls what it can from the outside air, and the motors are deliberately run inefficiently, making heat without torque, to add more. Heat goes to the cabin first and to the battery so it can accept regeneration.' },
     cruise: { label: 'Winter cruise', on: ['dr_hp', 'bat_hp', 'air_hp', 'hp_cab'], text: 'After some minutes the motors and battery are warm and produce a kilowatt or two of waste heat. The system collects it instead of rejecting it, so the cabin is heated largely with energy that was already lost.' },
-    charge: { label: 'Fast charging', on: ['bat_hp', 'hp_air', 'hp_cab'], text: 'Hundreds of amps heat the cells by 10–20 kW. The refrigerant circuit works as a chiller, carrying that heat to the radiator. In winter part of it warms the cabin for free while you wait.' },
+    charge: { label: 'Fast charging', on: ['bat_hp', 'hp_air', 'hp_cab'], text: 'Hundreds of amps heat the cells, by 10–20 kW at the start of a session and a few kilowatts once the power has tapered. The refrigerant circuit works as a chiller, carrying that heat to the radiator. In winter part of it warms the cabin for free while you wait.' },
     precon: { label: 'Heading to a charger', on: ['dr_hp', 'hp_bat'], text: 'With a fast charger set as destination, the car warms its battery in advance. The motors generate heat on purpose and the system delivers it to the pack, so the cells arrive at 40–50 °C, ready for full power.' },
     summer: { label: 'Hot day', on: ['cab_hp', 'bat_hp', 'hp_air'], text: 'The same machine runs as an air conditioner. Heat is taken from the cabin and, when needed, from the battery, and rejected to the outside air through the radiator.' },
   };
@@ -60,7 +60,7 @@
       </ol>
       <div data-fig="pump"></div>
       <p>Energy is conserved: the heat delivered equals the heat collected outside <em>plus</em> the electrical work of the compressor. The figure of merit is the <em class="t">coefficient of performance</em>,</p>
-      ${eq(String.raw`\text{COP} = \frac{Q_{delivered}}{W_{electric}} \quad\quad \text{COP}_{max} = \frac{T_{hot}}{T_{hot} - T_{cold}}`, 'Temperatures in kelvin. The second expression is the Carnot limit, which no heat pump can exceed. Real machines reach roughly 40–50% of it.')}
+      ${eq(String.raw`\text{COP} = \frac{Q_{delivered}}{W_{electric}} \quad\quad \text{COP}_{max} = \frac{T_{hot}}{T_{hot} - T_{cold}}`, 'Temperatures in kelvin, and they are the temperatures of the refrigerant itself: to move heat at a useful rate it must condense some 25 degrees above cabin temperature and evaporate several degrees below the outside air. The second expression is the Carnot limit for a cycle between those two temperatures. Real machines reach roughly 40–50% of it.')}
       <p>The limit explains everything about heat-pump behaviour. The smaller the temperature lift, the better: lifting heat by 30 degrees is far cheaper than lifting it by 60. So efficiency is excellent in mild cold and fades in deep cold, where the car supplements it by making heat directly.</p>
       <div class="callout y"><h5>In the Model Y</h5><p>The Model Y was the first Tesla with a heat pump, in 2020. Its refrigerant and coolant circuits meet in one valve block, nicknamed the octovalve, that can connect any heat source to any heat sink. There is no separate resistive cabin heater: when more heat is needed than the outside air can give, the compressor and the motors are driven in deliberately lossy ways and their waste heat is collected.</p></div>
 
@@ -73,7 +73,7 @@
         <li><strong>A cold battery</strong> (Chapter 7). Higher internal resistance, less of the stored energy can be extracted, and regeneration is restricted until the cells warm up.</li>
       </ul>
       <div data-fig="winter"></div>
-      <p>At a steady 100 km/h, once everything has warmed up, this model gives ${fmt(r(20, 'off'))} km at 20 °C, ${fmt(r(-10, 'heatpump'))} km at −10 °C with the heat pump, and ${fmt(r(-10, 'resistive'))} km with a resistive heater. The first minutes of any winter trip are the worst, because the cabin and the battery themselves must be warmed up. Preheating while still plugged in moves that cost from the battery to the grid.</p>
+      <p>At a steady 100 km/h, not counting the energy needed to warm the car up at the start, this model gives ${fmt(r(20, 'off'))} km at 20 °C, ${fmt(r(-10, 'heatpump'))} km at −10 °C with the heat pump, and ${fmt(r(-10, 'resistive'))} km with a resistive heater. The first minutes of any winter trip are the worst, because the cabin and the battery themselves must be warmed up. Preheating while still plugged in moves that cost from the battery to the grid.</p>
 
       <h2><span class="n">11.4</span>One thermal system, many jobs</h2>
       <p>Cabin, battery and drive units each have a preferred temperature and each sometimes has heat to spare or heat to find. Instead of three separate systems the car has one, which routes heat wherever it is useful.</p>
@@ -85,7 +85,7 @@
       <ul>
         <li><strong>Too cold</strong>: internal resistance rises steeply, so peak power falls and charging current must be cut to avoid lithium plating. Below freezing the car may refuse fast charging until the pack has warmed.</li>
         <li><strong>Too hot</strong>: calendar ageing accelerates, and above about 55 °C the car limits power to protect the cells.</li>
-        <li><strong>Heat from within</strong>: every ampere heats the cells by I²R. At a fast charger that is 10–20 kW of heat that has to be removed continuously, more than a household oven at full power, flowing out of the floor of the car.</li>
+        <li><strong>Heat from within</strong>: every ampere heats the cells by I²R. At the start of a fast-charging session that is 10–20 kW of heat to be carried away, more than a household oven at full power, flowing out of the floor of the car.</li>
       </ul>`;
     },
 
@@ -97,7 +97,7 @@
       const bh = document.createElement('div'); bh.style.margin = '6px 0 10px'; f.stage.appendChild(bh);
       const bar = EV.segbar(bh, { title: 'Where the cabin\'s heat comes from', unit: 'kW', dec: 1 });
       const cp = EV.plot(f.stage, { h: 200, x: { label: 'Outside temperature (°C)', min: -30, max: 15, unit: '°C' }, y: { label: 'COP: units of heat per unit of electricity', min: 0, max: 9 } });
-      const R = EV.readouts(f.out, { cop: ['COP', ''], car: ['Carnot limit', ''], q: ['Heat the cabin needs', 'kW'], e: ['Electricity used', 'kW', 's1'], free: ['Heat taken from outside', 'kW', 's2'], pc: ['Extra energy at 100 km/h', '%'] });
+      const R = EV.readouts(f.out, { cop: ['COP', ''], car: ['Carnot limit for this cycle', ''], q: ['Heat the cabin needs', 'kW'], e: ['Electricity used', 'kW', 's1'], free: ['Heat taken from outside', 'kW', 's2'], pc: ['Extra energy at 100 km/h', '%'] });
       const s = EV.controls(f.ctl, {
         t: { label: 'Outside temperature', min: -30, max: 15, step: 1, value: -5, unit: '°C' },
         mode: { type: 'seg', label: 'Heater', options: [['hp', 'Heat pump'], ['res', 'Resistive']], value: 'hp' },
@@ -109,7 +109,7 @@
         R({ cop: hp ? fmt(c.cop, 1) : '1.0', car: fmt(c.carnot, 1), q: fmt(c.q / 1000, 1), e: fmt(el / 1000, 1), free: fmt((c.q - el) / 1000, 1), pc: '+' + fmt(el / base * 100) });
         bar([{ label: 'Electricity', value: el / 1000, color: 's1' }, { label: 'Free heat from outside air', value: (c.q - el) / 1000, color: 's2' }], `${fmt(c.q / 1000, 1)} kW of heat`);
         cp.set({
-          series: [{ name: 'Carnot limit', color: 'muted', dash: true, pts: EV.sample((x) => P.copHeat(x).carnot, -30, 15, 45) }, { name: 'Heat pump', color: 's2', pts: EV.sample((x) => P.copHeat(x).cop, -30, 15, 45), w: 2.5 }, { name: 'Resistive heater', color: 's1', pts: [[-30, 1], [15, 1]] }],
+          series: [{ name: 'Carnot limit between the refrigerant temperatures', color: 'muted', dash: true, pts: EV.sample((x) => P.copHeat(x).carnot, -30, 15, 45) }, { name: 'Heat pump', color: 's2', pts: EV.sample((x) => P.copHeat(x).cop, -30, 15, 45), w: 2.5 }, { name: 'Resistive heater', color: 's1', pts: [[-30, 1], [15, 1]] }],
           vlines: [{ x: s.t }], points: [{ x: s.t, y: hp ? c.cop : 1, color: hp ? 's2' : 's1', label: `COP ${fmt(hp ? c.cop : 1, 1)}` }],
         });
       }

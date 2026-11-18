@@ -44,6 +44,8 @@ for (const k of ['rwd', 'lr', 'perf']) {
 check('Performance launch acceleration', P.accelRun(V.perf, { vStop: 20 }).a[20], 0.8, 1.1, 'g');
 check('RWD on ice (mu 0.1) is grip-limited', P.accelRun(V.rwd, { vStop: 5, mu: 0.1 }).a[20], 0.04, 0.08, 'g');
 check('LR top speed reached', P.accelRun(lr, { tMax: 60 }).vTop, 199, 202, 'km/h');
+check('Performance launch: front axle is grip-limited', P.driveForce(V.perf, 1, { resist: 200 }).lim === 'grip' ? 1 : 0, 1, 1);
+check('LR launch on dry road is torque-limited', P.driveForce(lr, 1, { resist: 200 }).lim === 'torque' ? 1 : 0, 1, 1);
 check('motor rpm at 201 km/h', P.wOf(lr, 201 / 3.6) * 30 / Math.PI, 13000, 15000, 'rpm');
 
 // --- motor efficiency map
@@ -62,6 +64,9 @@ check('LR voltage sag at full power', pk.V0 - pk.V, 35, 75, 'V');
 check('LR 10-80 % DC charge time', P.chargeSession(lr, { from: 0.1, to: 0.8 }).minutes, 24, 30, 'min');
 check('RWD 10-80 % DC charge time', P.chargeSession(V.rwd, { from: 0.1, to: 0.8 }).minutes, 22, 31, 'min');
 check('LR 0-100 % at 11 kW AC', P.chargeSession(lr, { from: 0, to: 1, ac: true }).minutes / 60, 7.3, 8.6, 'h');
+
+check('cold (0 C) fast charging, LR share of own peak', P.chargePower(lr, 0.1, { tempC: 0 }) / lr.dcPeak, 0.3, 0.4);
+check('cold (0 C) fast charging, RWD (LFP) share is lower', P.chargePower(V.rwd, 0.1, { tempC: 0 }) / V.rwd.dcPeak, 0.18, 0.3);
 
 // --- regeneration
 check('LR regen power at 80 km/h is capped by the battery', P.regenForce(lr, 80 / 3.6, 2072).pBatt / 1000, 80, 86, 'kW');

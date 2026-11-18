@@ -10,6 +10,9 @@
     html(car) {
       const m = car.curb + 75, c100 = P.consumption(car, { v: 100 / 3.6 });
       const kwh = 3.6e6;
+      let sweet = 20, wltpV = 60;
+      for (let k = 12; k <= 120; k++) if (P.consumption(car, { v: k / 3.6 }).whkm < P.consumption(car, { v: sweet / 3.6 }).whkm) sweet = k;
+      for (let k = 40; k <= 140; k++) if (P.range(car, { v: k / 3.6 }) >= car.pub.wltp) wltpV = k;      // steady speed with the same range as the WLTP figure
       return `
       <div class="keys"><h4>Key ideas</h4><ul>
         <li>A kilowatt-hour is 3.6 million joules. Consumption in Wh/km is a force in disguise: resisting force ÷ 3.6, plus losses.</li>
@@ -32,10 +35,10 @@
       <h2><span class="n">2.2</span>Consumption and the sweet spot</h2>
       <p>The battery must supply the road load from Chapter 1, plus what the drivetrain loses on the way, plus everything that runs whether or not the car moves.</p>
       ${eq(String.raw`\frac{E}{d} = \frac{F_{road}}{\eta_{drive}} + \frac{P_{aux}}{v}`, '<b>F<sub>road</sub></b> road load · <b>η<sub>drive</sub></b> battery-to-wheel efficiency (about 0.9) · <b>P<sub>aux</sub></b> electronics and climate power · <b>v</b> speed')}
-      <p>The second term is the interesting one. A constant ${fmt(car.auxW)} W of electronics costs ${fmt(car.auxW / 100)} Wh/km at 100 km/h but ${fmt(car.auxW / 10)} Wh/km at 10 km/h, because the slower you go the longer each kilometre takes. Meanwhile the air-drag term falls with the square of speed. Add them and the curve has a <em class="t">minimum</em>, usually between 30 and 50 km/h. Turn on the heater and the minimum moves to a higher speed.</p>
+      <p>The second term is the interesting one. A constant ${fmt(car.auxW)} W of electronics costs ${fmt(car.auxW / 100)} Wh/km at 100 km/h but ${fmt(car.auxW / 10)} Wh/km at 10 km/h, because the slower you go the longer each kilometre takes. Meanwhile the air-drag term falls with the square of speed. Add them and the curve has a <em class="t">minimum</em>, at about ${sweet} km/h for this car. Turn on the heater and the minimum moves to a higher speed.</p>
       <div data-fig="range"></div>
       <div class="callout y"><h5>Why the official range is hard to reach on a motorway</h5>
-        <p>The ${car.pub.wltp} km WLTP figure comes from a test cycle whose average speed is 46.5 km/h, with gentle acceleration, at 23 °C. That is close to the sweet spot of the curve above. A steady 130 km/h sits far to the right of it, where the same car needs ${fmt(P.consumption(car, { v: 130 / 3.6 }).whkm)} Wh/km and reaches about ${fmt(P.range(car, { v: 130 / 3.6 }))} km. The test is not wrong. It just measures a different point on the curve.</p></div>
+        <p>The ${car.pub.wltp} km WLTP figure comes from a test cycle at 23 °C that averages only 46.5 km/h, with stops, gentle accelerations and a short phase up to 131 km/h. Its energy use works out the same as a steady ${wltpV} km/h on the curve above. A steady 130 km/h sits far to the right of that, where the same car needs ${fmt(P.consumption(car, { v: 130 / 3.6 }).whkm)} Wh/km and reaches about ${fmt(P.range(car, { v: 130 / 3.6 }))} km. The test is not wrong. It just measures a different point on the curve.</p></div>
       <h3>Rules of thumb you can now derive</h3>
       <ul>
         <li><strong>+10 km/h at motorway speed costs about ${fmt((P.consumption(car, { v: 130 / 3.6 }).whkm / P.consumption(car, { v: 120 / 3.6 }).whkm - 1) * 100)}% more energy</strong> (120 → 130 km/h). Drag dominates and scales with v².</li>
@@ -54,7 +57,7 @@
       <p>Lifting the car stores <em class="t">potential energy</em>, ${M`E_p = m g h`}. For the ${car.name} with a driver, every 100 m of climb takes ${fmt(m * G * 100 / kwh, 2)} kWh, about ${fmt(m * G * 100 / kwh / car.usable * 100, 1)}% of the battery. A 1000 m mountain pass costs ${fmt(m * G * 1000 / kwh, 1)} kWh on top of normal driving.</p>
       <p>Unlike drag, that energy is not gone. On the way down gravity pushes the car, the motors act as generators, and most of the deposit comes back. A petrol car would turn it into brake heat.</p>
       <div data-fig="hill"></div>
-      <div class="callout myth"><h5>Common misconception</h5><p>"Mountains destroy range." A climb drains the battery alarmingly fast, but a round trip over a pass costs only a little more than the same distance on the flat. On the way down, part of the stored energy pushes the car through the air directly and the rest flows back into the battery. What is truly lost is a few percent in the drivetrain each way, plus anything the friction brakes had to absorb when the descent was too steep for regeneration alone.</p></div>`;
+      <div class="callout myth"><h5>Common misconception</h5><p>"Mountains destroy range." A climb drains the battery alarmingly fast, but a round trip over a pass costs only a little more than the same distance on the flat. On the way down, part of the stored energy pushes the car through the air directly and the rest flows back into the battery. What is truly lost is several percent in the drivetrain each way, plus anything the friction brakes had to absorb when the descent was too steep for regeneration alone.</p></div>`;
     },
 
     init(root, car) {
@@ -125,7 +128,7 @@
 
       /* ------------------------------------------------------------- hills -- */
       const h = EV.fig(root, 'hill', { title: 'Over the pass and down again', hint: 'Energy drawn from the battery along a climb and the matching descent, compared with the same distance on a flat road.',
-        cap: '<b>Try this.</b> Make the pass steep and fast until the "wasted in friction brakes" readout appears. That is the point where gravity delivers power faster than the motors and battery can absorb it.' });
+        cap: '<b>Try this.</b> Make the descent steep and fast, then switch to a cold battery. The "wasted in friction brakes" readout fills: gravity is now delivering power faster than the cold cells may absorb it, and the discs must take the rest.' });
       const profile = EV.el('<svg viewBox="0 0 600 70" preserveAspectRatio="none" style="height:70px;padding:0 14px 0 48px;box-sizing:border-box" aria-hidden="true"><polygon points="0,68 300,6 600,68" fill="var(--s3)" fill-opacity=".18" stroke="var(--s3)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>');
       const cap2 = EV.el('<div class="small" style="text-align:center;margin:-46px 0 26px;position:relative"></div>');
       h.stage.append(profile, cap2);
@@ -135,12 +138,18 @@
         height: { label: 'Height of the pass', min: 100, max: 2500, step: 50, value: 1000, unit: 'm' },
         grade: { label: 'Gradient', min: 3, max: 14, step: 0.5, value: 7, unit: '%' },
         speed: { label: 'Speed', min: 30, max: 120, step: 5, value: 70, unit: 'km/h' },
+        batt: { type: 'seg', label: 'Battery', options: [['w', 'Warm'], ['c', 'Cold: regeneration limited']], value: 'w' },
       }, hUpdate);
       function hUpdate() {
         const gr = hs.grade / 100, v = hs.speed / 3.6, Lkm = hs.height / Math.sin(Math.atan(gr)) / 1000;
-        const up = P.consumption(car, { v, grade: gr }), dn = P.consumption(car, { v, grade: -gr }), fl = P.consumption(car, { v });
-        const eUp = up.whkm * Lkm / 1000, eDn = dn.whkm * Lkm / 1000, eFl = fl.whkm * Lkm / 1000;
-        const fr = dn.regenCapped / v / 3.6 * Lkm / 1000;
+        const up = P.consumption(car, { v, grade: gr }), fl = P.consumption(car, { v }), mass = car.curb + 75;
+        // descent: gravity minus drag must be braked away; the motors take what the battery will accept, the discs take the rest
+        const rlD = P.roadLoad(car, { v, grade: -gr, mass }), need = Math.max(0, -rlD.total);
+        const lim = hs.batt === 'w' ? car.regenMax : P.regenLimitW(car, 0.6, -10);
+        const Fr = Math.min(need, P.regenForce(car, v, mass, lim).F), Ffr = need - Fr;
+        const pDn = (need > 0 ? P.drivetrain(car, -Fr, v).Pel : P.drivetrain(car, rlD.total, v).Pel) + car.auxW;
+        const eUp = up.whkm * Lkm / 1000, eDn = pDn / v / 3.6 * Lkm / 1000, eFl = fl.whkm * Lkm / 1000;
+        const fr = Ffr / 3.6 * Lkm / 1000;                                 // N -> Wh/km -> kWh over the descent
         hp.set({
           xMax: 2 * Lkm,
           series: [
@@ -158,8 +167,8 @@
     quiz: (car) => [
       { q: 'A car uses 150 Wh/km at 100 km/h. What average power is the battery delivering?', o: ['1.5 kW', '15 kW', '150 kW', '100 kW'], a: 1, why: 'Power = energy per distance × distance per time: 150 Wh/km × 100 km/h = 15 000 W. A hair-dryer is 2 kW; cruising takes about seven of them.' },
       { q: 'Why does consumption per km <em>rise</em> at very low speeds, for example in a traffic jam?', o: ['Air drag increases', 'The motor is less powerful', 'Always-on loads are spread over fewer kilometres', 'Rolling resistance grows sharply'], a: 2, why: 'Electronics and climate draw power per second, not per metre. The slower you go, the more seconds each kilometre takes, so their share per km grows as 1/v.' },
-      { q: `You climb a 1000 m pass in the ${car.name} and descend the other side. Roughly how much of the ${fmt((car.curb + 75) * G * 1000 / 3.6e6, 1)} kWh of potential energy do you get back?`, o: ['None, it is lost as heat', 'About 10% flows back into the battery', 'Most of it: about 70% flows back into the battery and the rest pushes the car against drag on the way down', 'All of it flows back into the battery'], a: 2, why: 'Gravity returns the energy at the wheels. Some of it overcomes drag and rolling resistance during the descent (energy the battery would otherwise have supplied), and the remainder passes back through gearbox, motor and inverter into the battery. Only when the descent is steeper than the regeneration limit do friction brakes waste the excess.' },
-      { q: 'Petrol stores about 70 times more energy per kilogram than a battery pack. Why are electric cars viable anyway?', o: ['Electricity is cheaper', 'The electric drivetrain converts about four times more of its stored energy into motion, and regenerates when braking', 'Batteries are lighter than fuel tanks', 'Electric cars are much lighter overall'], a: 1, why: 'Roughly 88% of battery energy reaches the wheels against about 20–25% of fuel energy. That cuts the gap from 70× to under 20×, and a large, heavy pack covers the rest.' },
+      { q: `You climb a 1000 m pass in the ${car.name} and descend the other side. Roughly how much of the ${fmt((car.curb + 75) * G * 1000 / 3.6e6, 1)} kWh of potential energy do you get back?`, o: ['None, it is lost as heat', 'About 10% flows back into the battery', 'Most of it: on a typical pass roughly half to three quarters flows back into the battery, and the rest pushes the car against drag on the way down', 'All of it flows back into the battery'], a: 2, why: 'Gravity returns the energy at the wheels. Some of it overcomes drag and rolling resistance during the descent (energy the battery would otherwise have supplied), and the remainder passes back through gearbox, motor and inverter into the battery. Only when the descent is steeper than the regeneration limit do friction brakes waste the excess.' },
+      { q: `Petrol stores about ${fmt(12000 / (car.gross * 1000 / car.packKg))} times more energy per kilogram than this battery pack. Why are electric cars viable anyway?`, o: ['Electricity is cheaper', 'The electric drivetrain converts about four times more of its stored energy into motion, and regenerates when braking', 'Batteries are lighter than fuel tanks', 'Electric cars are much lighter overall'], a: 1, why: `Roughly 88% of battery energy reaches the wheels against about 20–25% of fuel energy. That cuts the gap from ${fmt(12000 / (car.gross * 1000 / car.packKg))}× to about ${fmt(12000 * 0.22 / (car.gross * 1000 / car.packKg * 0.88))}×, and a large, heavy pack covers the rest.` },
       { q: 'Driving 110 km/h into a 20 km/h headwind, the air-drag force is the same as driving in still air at…', o: ['110 km/h', '120 km/h', '130 km/h', '150 km/h'], a: 2, why: 'Drag depends on speed relative to the air: 110 + 20 = 130 km/h. The energy per km spent on air is the same as at 130 km/h in still air, but you arrive later.' },
     ],
   });

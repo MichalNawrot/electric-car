@@ -3,7 +3,7 @@
   'use strict';
   const EV = window.EV, { M, eq, fmt } = EV, P = EV.phys, { clamp } = P;
   const TAU = Math.PI * 2;
-  const CELLS = {
+  const CELL_TYPES = {
     nmc: { name: '2170 NMC', v: 3.72, ah: 4.76, kg: 0.069, vmax: 4.2, chem: 'NMC', imax: 30 },
     lfp: { name: 'LFP prismatic', v: 3.2, ah: 184, kg: 3.6, vmax: 3.65, chem: 'LFP', imax: 500 },
     c4680: { name: '4680 NMC', v: 3.7, ah: 23.5, kg: 0.355, vmax: 4.2, chem: 'NMC', imax: 120 },
@@ -89,7 +89,7 @@
       const f = EV.fig(root, 'cell', { side: true, title: 'A lithium-ion cell at work', hint: 'Violet dots are lithium ions crossing the electrolyte. Blue dots are electrons, which must go round the outside.',
         cap: '<b>What to look for.</b> Ions and electrons always leave the same electrode and arrive at the same electrode, by different routes. Switch to charging and both reverse.' });
       const C = EV.canvas(f.stage, { ratio: 0.62, minH: 300, maxH: 400, label: 'Cross-section of a lithium-ion cell with ions moving between anode and cathode' });
-      const R = EV.readouts(f.out, { soc: ['State of charge', '%'], v: ['Cell voltage', 'V'], ocv: ['Resting voltage', 'V'], i: ['Current', 'A'] });
+      const R = EV.readouts(f.out, { soc: ['State of charge', '%'], v: ['Cell voltage', 'V'], ocv: ['Resting voltage', 'V'], i: ['Current (+ = discharging)', 'A'] });
       const COLS = 5, ROWS = 9, N = COLS * ROWS;
       const ions = [], electrons = [];
       for (let i = 0; i < N; i++) ions.push({ side: i < N * 0.8 ? 'a' : 'c', site: i, x: 0, y: 0, moving: false });
@@ -170,7 +170,7 @@
         if (dir) { const x0 = w / 2 - dir * 24, x1 = w / 2 + dir * 24, ya = (top + bot) / 2; EV.arrow(ctx, x0, ya, x1, ya, col('s7'), 2.5, 8); EV.text(ctx, 'Li⁺', w / 2, ya - 9, { size: 11.5, align: 'center', color: col('ink-2'), halo: true }); }
         if (dir) EV.text(ctx, dir > 0 ? 'electrons →' : '← electrons', w * (w < 480 ? 0.17 : 0.25), wy - 8, { size: 11.5, align: 'center', color: col('ink-2') });
         const ocv = P.cellOcv(car.chem, soc), I = dir * s.rate * car.cellAh, v = ocv - I * car.cellR;
-        if (dt > 0 || t === 0) R({ soc: fmt(soc * 100), v: fmt(v, 2), ocv: fmt(ocv, 2), i: (I > 0 ? '−' : I < 0 ? '+' : '') + fmt(Math.abs(I), car.cellAh > 50 ? 0 : 1) });
+        if (dt > 0 || t === 0) R({ soc: fmt(soc * 100), v: fmt(v, 2), ocv: fmt(ocv, 2), i: fmt(I, car.cellAh > 50 ? 0 : 1) });
         if (soc <= 0 && dir > 0) EV.text(ctx, 'Empty: all the lithium is in the cathode', w / 2, h - 2, { size: 11.5, align: 'center', color: col('ink-2') });
         if (soc >= 1 && dir < 0) EV.text(ctx, 'Full: the graphite can hold no more', w / 2, h - 2, { size: 11.5, align: 'center', color: col('ink-2') });
       }
@@ -178,7 +178,7 @@
 
       /* -------------------------------------------------------------- OCV -- */
       const g = EV.fig(root, 'ocv', { side: true, title: 'Resting voltage and voltage under load', hint: `Top: one cell of each chemistry at rest. Bottom: the whole ${car.name} pack, at rest and with the power you choose.`,
-        cap: '<b>Try this.</b> Ask for full power at 10% charge and −10 °C. The voltage collapses and the pack turns a large share of its output into heat. That is why the car limits power when cold or nearly empty.' });
+        cap: '<b>Try this.</b> Ask for 150 kW at 10% charge and −10 °C. The voltage collapses and the pack turns a large share of its output into heat. Ask for more and the readouts say "too much": no current can deliver it. That is why the car limits power when cold or nearly empty.' });
       const p1 = EV.plot(g.stage, { h: 210, x: { label: '', min: 0, max: 100, unit: '%' }, y: { label: 'Cell voltage at rest (V)', min: 2.4, max: 4.4, unit: 'V' }, table: false });
       const p2 = EV.plot(g.stage, { h: 250, x: { label: 'State of charge (%)', min: 0, max: 100, unit: '%' }, y: { label: 'Pack voltage (V)', min: 'auto', max: 'auto', unit: 'V' } });
       const GR = EV.readouts(g.out, { i: ['Pack current', 'A'], v: ['Terminal voltage', 'V'], sag: ['Sag from rest', 'V'], heat: ['Heat inside the pack', 'kW', 's2'], eta: ['Share of energy delivered', '%'], c: ['Rate', 'C'] });
@@ -203,6 +203,8 @@
       gUpd();
 
       /* ------------------------------------------------------------- pack -- */
+      // the selected car's own cell data, so that loading its real layout gives its real energy
+      const CELLS = Object.assign({}, CELL_TYPES, car.chem === 'LFP' ? { lfp: Object.assign({}, CELL_TYPES.lfp, { ah: car.cellAh, v: car.cellV }) } : { nmc: Object.assign({}, CELL_TYPES.nmc, { ah: car.cellAh, v: car.cellV }) });
       const k = EV.fig(root, 'pack', { side: true, title: 'Pack builder', hint: 'Each column is one group of cells in parallel. Columns are chained in series from left to right.',
         cap: `<b>Try this.</b> Keep the number of cells about the same and trade series for parallel. Energy stays put; voltage and current swap. Then press the button to load the real ${car.name} layout.` });
       const KC = EV.canvas(k.stage, { ratio: 0.42, minH: 220, maxH: 300, label: 'Grid of battery cells arranged in series and parallel' });

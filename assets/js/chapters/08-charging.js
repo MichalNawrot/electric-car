@@ -51,11 +51,14 @@
 
   EV.chapter({
     id: 'charging', n: '8', title: 'Charging', color: 's6',
-    blurb: 'AC or DC, why the last 20% takes so long, what limits the power, and why on a long trip it can pay to drive slower and charge less.',
+    blurb: 'AC or DC, why the last 20% takes so long, what limits the power, and how the chargers on your route decide the fastest way to drive a long trip.',
     lead: 'Charging is driving in reverse: push the lithium back uphill into the graphite. How fast that can happen is set by three things in turn. The source, the electronics, and finally the chemistry of the cells themselves.',
     html(car) {
       const c = P.consumption(car, { v: 110 / 3.6 }), kmPerKWh = 1000 / c.whkm;
       const s80 = P.chargeSession(car, { from: 0.1, to: 0.8 }), s100 = P.chargeSession(car, { from: 0.8, to: 1 });
+      const plan = (kw, kmh) => trip(car, 800, kmh, { start: 1, arr: 0.1, dep: 0.65, kw }).total;
+      const best = (kw) => { let b = 80; for (let k = 80; k <= 170; k += 2.5) if (plan(kw, k) < plan(kw, b)) b = k; return b; };
+      const gain = (kw) => plan(kw, 100) - plan(kw, 130);                   // minutes saved by cruising at 130 instead of 100
       return `
       <div class="keys"><h4>Key ideas</h4><ul>
         <li>A battery can only be charged with direct current. The question is <strong>where</strong> the AC from the grid is converted: in the car (AC charging, slow) or in the charger (DC charging, fast).</li>
@@ -72,7 +75,7 @@
       <p>With <strong>DC fast charging</strong> the converter stays on the ground in a cabinet the size of a wardrobe, with its own grid connection and cooling. Its output goes straight to the pack terminals, bypassing the on-board charger. The car remains in charge: it tells the cabinet every fraction of a second exactly what voltage and current it wants.</p>
       <div class="tiles">
         <div class="tile"><div class="k">Household socket · 2.3 kW</div><div class="v">${fmt(2.0 * 0.92 * kmPerKWh)}<small>km per hour</small></div><div class="d">a full charge takes more than a day</div></div>
-        <div class="tile"><div class="k">Wallbox · 11 kW</div><div class="v">${fmt(11 * 0.9 * kmPerKWh)}<small>km per hour</small></div><div class="d">empty to full overnight, ${fmt(car.usable / (11 * 0.9), 1)} h</div></div>
+        <div class="tile"><div class="k">Wallbox · 11 kW</div><div class="v">${fmt(11 * 0.9 * kmPerKWh)}<small>km per hour</small></div><div class="d">empty to full overnight, ${fmt(P.chargeSession(car, { from: 0, to: 1, ac: true }).minutes / 60, 1)} h</div></div>
         <div class="tile"><div class="k">DC charger · 50 kW</div><div class="v">${fmt(50 * kmPerKWh)}<small>km per hour</small></div><div class="d">older roadside units</div></div>
         <div class="tile"><div class="k">Supercharger · ${car.dcPeak} kW peak</div><div class="v">${fmt(car.dcPeak * kmPerKWh / 10) * 10}<small>km per hour</small></div><div class="d">at the peak; it does not last</div></div>
       </div>
@@ -81,7 +84,7 @@
       <h2><span class="n">8.2</span>The charging session</h2>
       <p>If power were constant, time would simply be energy divided by power: 10% to 80% of ${car.usable} kWh is ${fmt(0.7 * car.usable, 1)} kWh, and at ${car.dcPeak} kW that would take ${fmt(0.7 * car.usable / car.dcPeak * 60)} minutes. In reality it takes about ${fmt(s80.minutes)}, because the car asks for less and less power as the battery fills. Run a session and scrub through it.</p>
       <div data-fig="session"></div>
-      <p>The last fifth is the slow part: 80% to 100% takes ${fmt(s100.minutes)} minutes, about as long as 10% to 80%. On AC the curve is flat almost to the end, because 11 kW is far below anything the cells would object to.</p>
+      <p>The last fifth is the slow part: 80% to 100% takes ${fmt(s100.minutes)} minutes, ${s100.minutes > s80.minutes * 1.12 ? 'longer than' : 'about as long as'} the whole of 10% to 80%. On AC the curve is flat almost to the end, because 11 kW is far below anything the cells would object to.</p>
 
       <h2><span class="n">8.3</span>Why the power tapers</h2>
       <p>Chapter 7 gave the relation between a cell's terminal voltage and its current. Charging reverses the sign: the terminal voltage sits <em>above</em> the resting voltage by I·R.</p>
@@ -102,7 +105,7 @@
       <h2><span class="n">8.5</span>The road-trip problem</h2>
       <p>On a trip longer than one battery, total time is driving time plus charging time, and the two pull in opposite directions. Drive faster and you spend less time on the road but burn energy with the square of speed (Chapter 1), which you must then buy back at the charger. And because of the taper, the energy is cheap in time at low charge and expensive near full.</p>
       <div data-fig="trip"></div>
-      <p>Two robust lessons come out of the model. With powerful chargers, the fastest plan is to drive at the speed limit, arrive nearly empty and leave at 55–70%: many short stops beat a few long ones. With weak chargers the picture flips. Every kWh takes so long to replace that slowing down gets you there sooner.</p>`;
+      <p>Two robust lessons come out of the model. First, whatever the charger, arrive nearly empty and leave at 55–70%: many short stops beat a few long ones. Second, the weaker the chargers, the less it pays to drive fast, because every extra kilowatt-hour takes longer to replace. On an 800 km trip in this car, cruising at 130 instead of 100 km/h saves ${fmt(gain(250))} minutes with 250 kW chargers but only ${fmt(gain(50))} minutes with 50 kW ones, and the cruising speed that gives the shortest journey falls from ${best(250) >= 170 ? 'beyond 170' : 'about ' + fmt(best(250))} km/h to about ${fmt(best(50))} km/h.</p>`;
     },
 
     init(root, car) {
@@ -184,7 +187,7 @@
 
       /* ------------------------------------------------------------- trip -- */
       const k = EV.fig(root, 'trip', { side: true, title: 'Road-trip planner', hint: 'Total journey time against cruising speed, for the charging strategy you choose. Start with a full battery, 20 °C, flat motorway, five minutes lost per stop.',
-        cap: '<b>Try this.</b> With 250 kW chargers, find the fastest cruising speed. Then switch to 50 kW chargers and watch the best speed fall. Finally compare leaving each stop at 60% with leaving at 100%.' });
+        cap: '<b>Try this.</b> With 250 kW chargers, find the cruising speed that gives the shortest journey. Then switch to 50 kW chargers: the best speed falls and the curve flattens, so hurrying buys much less. Finally compare leaving each stop at 60% with leaving at 100%.' });
       const kp = EV.plot(k.stage, { h: 300, x: { label: 'Cruising speed (km/h)', min: 80, max: 170, unit: 'km/h' }, y: { label: 'Journey time (hours)', min: 0, max: 'auto', unit: 'h' } });
       const barHost = document.createElement('div'); barHost.style.marginTop = '10px'; k.stage.appendChild(barHost);
       const kb = EV.segbar(barHost, { title: 'Where the time goes at this speed', unit: 'min' });

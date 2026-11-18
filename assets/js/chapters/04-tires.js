@@ -18,7 +18,7 @@
       <div class="keys"><h4>Key ideas</h4><ul>
         <li>The contact patch area is set by load ÷ tyre pressure. For this car, about the size of a hand per tyre.</li>
         <li>Rolling resistance is rubber <strong>hysteresis</strong>: energy spent flexing the tyre that does not spring back. It scales with weight, not speed.</li>
-        <li>A tyre makes force only by <strong>slipping</strong> a little. Grip peaks near 10–15% slip and then falls.</li>
+        <li>A tyre makes force only by <strong>slipping</strong> a little. On dry asphalt grip peaks at roughly 10–20% slip and then falls.</li>
         <li>Each tyre has one grip budget, shared between driving, braking and cornering: the <strong>friction circle</strong>.</li>
         <li>A low centre of gravity means less load transfer, more total grip, and a car that slides long before it could roll.</li>
       </ul></div>
@@ -31,7 +31,7 @@
       <p>There is a neat mechanical way to see the same thing. Because the rubber pushes back harder while being compressed (front of the patch) than while relaxing (rear), the road's supporting force acts slightly <em>ahead</em> of the axle. That offset, only a few millimetres, creates a torque opposing rotation.</p>
       ${eq(String.raw`F_{roll} = C_{rr} \cdot F_z \quad\quad C_{rr} = \frac{e}{r}`, '<b>e</b> forward offset of the road force · <b>r</b> wheel radius. With C<sub>rr</sub> = ' + car.crr + ' and r = 0.35 m, e is about ' + fmt(car.crr * 350, 1) + ' mm.')}
       <div data-fig="roll"></div>
-      <p>Rolling resistance barely depends on speed, so it sets the floor of the consumption curve in Chapter 2. Around town it is the largest single consumer. This is why EV tyres use low-hysteresis silica compounds, why the recommended pressure is high, and why wide sticky performance tyres cost range: the Performance model's tyres have about 15% more rolling resistance than the standard ones.</p>
+      <p>Rolling resistance barely depends on speed, so it sets the floor of the consumption curve in Chapter 2. Around town it is the largest single consumer. This is why EV tyres use low-hysteresis silica compounds, why the recommended pressure is high, and why wide sticky performance tyres cost range: the Performance model's tyres have about ${fmt((EV.variants.perf.crr / EV.variants.lr.crr - 1) * 100)}% more rolling resistance than the standard ones.</p>
 
       <h2><span class="n">4.3</span>Grip comes from slip</h2>
       <p>Friction between tyre and road is usually written ${M`F_{max} = \mu F_z`}, with μ about 1.0 on dry asphalt. But a tyre is not a rigid block. To transmit a driving force the tread must stretch as it passes through the contact patch, and the wheel ends up turning slightly faster than the car's speed requires. The difference is the <em class="t">slip ratio</em>:</p>
@@ -45,7 +45,7 @@
       <p>The budget of each tyre changes from moment to moment, because accelerating, braking and cornering shift load between the wheels. The car's mass acts at the centre of gravity, a height <em>h</em> above the road, while the tyre forces act at ground level. The resulting torque must be balanced by extra load on some tyres and less on others:</p>
       ${eq(String.raw`\Delta F_z = \frac{m \, a \, h}{L} \quad \text{(front to rear)} \quad\quad \Delta F_z = \frac{m \, a_y \, h}{T} \quad \text{(side to side)}`, '<b>h</b> centre-of-gravity height (' + car.cgH + ' m) · <b>L</b> wheelbase (' + car.wheelbase + ' m) · <b>T</b> track width (' + car.track + ' m)')}
       <div data-fig="circle"></div>
-      <p>Two things to take from this. First, load transfer is proportional to the height of the centre of gravity. With ${car.packKg} kg of battery in the floor the Model Y's sits at about ${car.cgH} m, lower than most saloons. Second, a tyre's grip does not grow quite in proportion to its load, so every newton moved from one tyre to another loses a little total grip. Less transfer means more grip overall.</p>
+      <p>Two things to take from this. First, load transfer is proportional to the height of the centre of gravity. With ${car.packKg} kg of battery in the floor the Model Y's sits at about ${car.cgH} m, about as low as a saloon's and well below the 0.65–0.75 m of a conventional SUV. Second, a tyre's grip does not grow quite in proportion to its load, so every newton moved from one tyre to another loses a little total grip. Less transfer means more grip overall.</p>
 
       <h2><span class="n">4.5</span>Cornering and rollover</h2>
       <p>Going round a bend of radius <em>r</em> at speed <em>v</em> needs a sideways acceleration ${M`a_y = v^2 / r`}. The tyres can supply at most ${M`\mu g`}, so the fastest possible speed is ${M`v = \sqrt{\mu g r}`}: ${fmt(Math.sqrt(1.0 * G * 100) * 3.6)} km/h for a 100 m radius on dry asphalt, ${fmt(Math.sqrt(0.3 * G * 100) * 3.6)} km/h on snow.</p>
@@ -143,7 +143,7 @@
 
       /* ------------------------------------------------------------------ slip -- */
       const g = EV.fig(root, 'slip', { side: true, title: 'Grip versus slip', hint: 'The force a tyre can transmit, as a fraction of the load on it, against how much faster the tread moves than the road.',
-        cap: '<b>Try this.</b> On ice, find the slip that gives the most grip. Then push the slip to 100% and see how little is left. That is a spinning wheel.' });
+        cap: '<b>Try this.</b> On wet asphalt, find the slip that gives the most grip. Then push the slip to 100% and see how much is lost. That is a spinning wheel.' });
       const gp = EV.plot(g.stage, { h: 280, x: { label: 'Slip ratio (%)', min: 0, max: 100, unit: '%' }, y: { label: 'Friction coefficient μ = force ÷ load', min: 0, max: 1.2 } });
       const GC = EV.canvas(g.stage, { h: 120, label: 'Wheel turning faster than the road moves underneath it' });
       const GR = EV.readouts(g.out, { mu: ['Grip at this slip', 'μ'], pk: ['Peak grip', 'μ'], at: ['Slip at the peak', '%'], a: ['Best acceleration or braking', 'g'] });
@@ -194,7 +194,7 @@
         ax: { label: 'Accelerate (+) / brake (−)', min: -1.2, max: 1.2, step: 0.05, value: -0.5, unit: 'g' },
         ay: { label: 'Cornering: left (+) / right (−)', min: -1.2, max: 1.2, step: 0.05, value: 0.4, unit: 'g' },
         h: { label: 'Centre-of-gravity height', min: 0.35, max: 0.95, step: 0.01, value: car.cgH, unit: 'm' },
-        mu: { type: 'seg', label: 'Surface', options: [['1', 'Dry'], ['0.7', 'Wet'], ['0.3', 'Snow']], value: '1' },
+        mu: { type: 'seg', label: 'Surface', options: [['1', 'Dry'], ['0.8', 'Wet'], ['0.3', 'Snow']], value: '1' },
       }, cUpd);
       let st = null;
       function cUpd() {
@@ -321,7 +321,7 @@
       /* ------------------------------------------------------------------ braking -- */
       const b = EV.fig(root, 'brake', { title: 'Stopping distance', hint: 'Distance travelled while reacting, then while braking at the grip limit. All four bars share one scale.' });
       const hosts = {};
-      Object.entries({ dry: ['Dry asphalt · μ 1.0', 1.0], wet: ['Wet asphalt · μ 0.7', 0.7], snow: ['Packed snow · μ 0.3', 0.3], ice: ['Ice · μ 0.1', 0.1] }).forEach(([k, [n, mu]]) => {
+      Object.entries({ dry: ['Dry asphalt · μ 1.0', 1.0], wet: ['Wet asphalt · μ 0.8', 0.8], snow: ['Packed snow · μ 0.3', 0.3], ice: ['Ice · μ 0.1', 0.1] }).forEach(([k, [n, mu]]) => {
         const d = document.createElement('div'); d.style.marginBottom = '12px'; b.stage.appendChild(d); hosts[k] = { mu, n, d };
       });
       const bs = EV.controls(b.ctl, { v: { label: 'Speed', min: 30, max: 200, step: 5, value: 100, unit: 'km/h' }, tr: { label: 'Reaction time', min: 0.3, max: 2.5, step: 0.1, value: 1.0, unit: 's' } }, bUpd);
@@ -338,7 +338,7 @@
 
     quiz: (car) => [
       { q: 'You lower the tyre pressure from 2.9 to 2.2 bar. What happens to the contact patch and to rolling resistance?', o: ['Patch shrinks, resistance falls', 'Patch grows, resistance rises', 'Patch grows, resistance falls', 'Neither changes'], a: 1, why: 'Patch area ≈ load ÷ pressure, so lower pressure means a bigger patch. The tyre deforms more on each revolution, more energy is lost to hysteresis, and rolling resistance rises.' },
-      { q: 'Where does a tyre deliver its maximum driving force on dry asphalt?', o: ['At zero slip', 'At roughly 10–15% slip', 'At 50% slip', 'At 100% slip (wheel spinning)'], a: 1, why: 'Force rises with slip as the tread stretches, peaks when parts of the patch begin to slide, then falls. A spinning wheel has less grip than one held near the peak, and no sideways grip to speak of.' },
+      { q: 'Where does a tyre deliver its maximum driving force on dry asphalt?', o: ['At zero slip', 'At roughly 10–20% slip', 'At 50% slip', 'At 100% slip (wheel spinning)'], a: 1, why: 'Force rises with slip as the tread stretches, peaks when parts of the patch begin to slide, then falls. A spinning wheel has less grip than one held near the peak, and no sideways grip to speak of.' },
       { q: 'A tyre is using 80% of its grip for braking. How much can it still supply for cornering?', o: ['20%', '40%', '60%', '80%'], a: 2, why: 'The forces add as vectors inside the friction circle: √(1 − 0.8²) = 0.6. That is why braking hard and steering hard at once does not work.' },
       { q: `The Model Y's static stability factor is about ${fmt(car.track / (2 * car.cgH), 2)} and its tyres grip at about 1.0 g. On a flat dry road, if you corner too fast, the car will…`, o: ['Roll over', 'Slide', 'Do both at once', 'Neither, electronics prevent it'], a: 1, why: 'Rolling needs a sideways acceleration above T/2h, far more than the tyres can transmit. Grip runs out first, so the car slides. Rollovers need a "trip": a kerb, soft ground, or a slope.' },
       { q: 'Two cars brake at the limit from 100 km/h on the same road with the same tyres. One weighs 1200 kg, the other 2100 kg. Which stops shorter?', o: ['The lighter car', 'The heavier car', 'They stop in the same distance', 'It depends on the brake size only'], a: 2, why: 'Maximum deceleration is μ·g: the heavier car needs more force but presses its tyres down proportionally harder. In practice tyre load sensitivity gives the lighter car a small edge.' },

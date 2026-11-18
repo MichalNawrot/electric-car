@@ -3,7 +3,7 @@
   'use strict';
   const EV = window.EV, { M, eq, fmt } = EV, P = EV.phys, G = P.G, { clamp } = P;
   const VAR = [['rwd', 's1'], ['lr', 's2'], ['perf', 's3']];
-  const MU = { dry: ['Dry', null], wet: ['Wet', 0.7], snow: ['Snow', 0.3] };
+  const MU = { dry: ['Dry', null], wet: ['Wet', 0.8], snow: ['Snow', 0.3] };
 
   /** Wheel force of a petrol car with the same peak power, in each of six gears. Returns [[kmh, N], ...] per gear. */
   function petrol(car) {
@@ -36,13 +36,13 @@
       <p>The motor makes torque. The road needs force. Between them are two levers: the gearbox, which trades speed for torque, and the wheel radius, which turns torque into force at the contact patch.</p>
       ${eq(String.raw`F_{wheel} = \frac{T_{motor} \cdot G \cdot \eta_{gear}}{r_{wheel}}`, '<b>G</b> gear ratio (' + car.gear + ') · <b>η</b> gear efficiency (' + car.etaGear + ') · <b>r</b> wheel radius (' + car.rWheel + ' m)')}
       <div class="callout ex"><h5>Worked example · ${car.name} from standstill</h5>
-        <p>Peak motor torque ${fmt(car.tPeak)} N·m, so ${M`F = ${fmt(car.tPeak)} \times ${car.gear} \times ${car.etaGear} / ${car.rWheel} = ${fmt(F0)} \text{ N}`}. With a mass of ${fmt(m)} kg plus 5% for rotating parts, ${M`a = F / m_{eff} = ${fmt(F0 / (m * car.rot), 1)} \text{ m/s}^2`}, which is ${fmt(F0 / (m * car.rot) / G, 2)} g, provided the tyres can transmit it.</p></div>
+        <p>Peak motor torque ${fmt(car.tPeak)} N·m, so ${M`F = ${fmt(car.tPeak)} \times ${car.gear} \times ${car.etaGear} / ${car.rWheel} = ${fmt(F0)} \text{ N}`}. With a mass of ${fmt(m)} kg plus 5% for rotating parts, ${M`a = F / m_{eff} = ${fmt(F0 / (m * car.rot), 1)} \text{ m/s}^2`}, which is ${fmt(F0 / (m * car.rot) / G, 2)} g, provided the tyres can transmit it. In the full simulation of section 9.4, which checks the grip of each axle, the launch peaks at ${fmt(Math.max(...run.a), 2)} g.</p></div>
 
       <h2><span class="n">9.2</span>The tractive-effort diagram</h2>
       <p>Plot the force available at the wheels against road speed and you have the single most useful picture in vehicle engineering. On the same axes draw the force that resists motion (Chapter 1) and the most the tyres can transmit (Chapter 4). Everything about straight-line performance can be read off it:</p>
       <ul>
         <li>The <strong>gap</strong> between available force and resistance, divided by mass, is the acceleration at that speed.</li>
-        <li>Where the two curves <strong>cross</strong> is the highest speed the car could reach. (The real car is held to ${car.vMax} km/h by software, well before that.)</li>
+        <li>Where the two curves <strong>cross</strong> is the highest speed the car could reach, unless the motor hits its own speed limit first. (The real car is held to ${car.vMax} km/h by software before either happens.)</li>
         <li>Where the available force exceeds the <strong>grip line</strong>, the tyres would spin, and traction control holds the force at the line.</li>
       </ul>
       <div data-fig="tractive"></div>
@@ -53,7 +53,7 @@
       <p>The drive force acts at the road. The car's mass resists at the centre of gravity, ${car.cgH} m higher. Those two forces form a couple that tries to rotate the car nose-up. The suspension resists by loading the rear tyres harder and the front tyres less:</p>
       ${eq(String.raw`\Delta F_z = \frac{m \, a \, h}{L}`, 'At 0.5 g the ' + car.name + ' moves <b>' + fmt(m * 0.5 * G * car.cgH / car.wheelbase / G) + ' kg</b> of load from the front axle to the rear.')}
       <div data-fig="transfer"></div>
-      <p>More load means more grip (${M`F = \mu F_z`}), so acceleration rewards the driven axle if it is the rear one. That is why powerful two-wheel-drive cars are rear-driven. With both axles driven all of the car's weight contributes, and the limit becomes simply ${M`a = \mu g`}. The low centre of gravity is a mixed blessing here: less load transfer means a rear-drive car gains less at launch, but an all-wheel-drive one loses less at the front.</p>
+      <p>More load means more grip (${M`F = \mu F_z`}), so acceleration rewards the driven axle if it is the rear one. That is why powerful two-wheel-drive cars are rear-driven. With both axles driven all of the car's weight can contribute, and the upper limit becomes ${M`a = \mu g`}. A real two-motor car gets close to it but not all the way: each motor has its own torque limit, so at a hard launch the lightly loaded front tyres can run out of grip before the front motor runs out of torque, while the rear motor is already giving all it has. The low centre of gravity is a mixed blessing here: less load transfer means a rear-drive car gains less at launch, but an all-wheel-drive one loses less at the front.</p>
 
       <h2><span class="n">9.4</span>The full-throttle run</h2>
       <p>Put the pieces together and integrate ${M`a = (F - F_{resist}) / m_{eff}`} from rest. A 0–100 km/h run of the ${car.name} takes ${fmt(run.marks.t100, 1)} s in this model (published: ${car.pub.t100} s) and passes through distinct phases, each with its own limit.</p>
@@ -68,7 +68,7 @@
       const f = EV.fig(root, 'tractive', { side: true, title: 'Force available, force required', hint: 'Wheel force the motors can deliver, the grip limit of the tyres, and the resistance to overcome. The gap between them is what accelerates the car.',
         cap: '<b>Try this.</b> Raise the gear ratio to 13: launch force grows but the motor hits its speed limit before the car reaches top speed. Lower it to 6: the top end improves, the launch suffers. Then add the petrol car.' });
       const tp = EV.plot(f.stage, { h: 340, x: { label: 'Road speed (km/h)', min: 0, max: 270, unit: 'km/h' }, y: { label: 'Force at the wheels (kN)', min: 0, max: 'auto', unit: 'kN' } });
-      const TR = EV.readouts(f.out, { a0: ['Launch acceleration', 'g'], a: ['Acceleration at this speed', 'g'], sur: ['Surplus force', 'kN'], vt: ['Top speed the forces allow', 'km/h'], hill: ['Steepest hill at 30 km/h', '%'], rpm: ['Motor speed at this speed', 'rpm'] });
+      const TR = EV.readouts(f.out, { a0: ['Launch acceleration', 'g'], a: ['Acceleration at this speed', 'g'], sur: ['Surplus force', 'kN'], vt: ['Top speed without the software limit', 'km/h'], hill: ['Steepest hill at 30 km/h', '%'], rpm: ['Motor speed at this speed', 'rpm'] });
       const ts = EV.controls(f.ctl, {
         v: { label: 'Road speed', min: 0, max: 250, step: 5, value: 100, unit: 'km/h' },
         gear: { label: 'Gear ratio', min: 5, max: 14, step: 0.5, value: car.gear, fmt: (x) => x.toFixed(1) + ' : 1' },
@@ -80,20 +80,21 @@
         const c = Object.assign({}, car, { gear: ts.gear }), mu = MU[ts.mu][1] == null ? car.mu : MU[ts.mu][1];
         const grip = car.drive === 'AWD' ? mu * m0 * G : mu * m0 * G * car.rearStatic / (1 - mu * car.cgH / car.wheelbase);
         const F = (kmh) => P.tractiveForce(c, kmh / 3.6), Rz = (kmh) => P.roadLoad(car, { v: kmh / 3.6, grade: ts.grade / 100, mass: m0 }).total;
+        const road = (kmh) => P.driveForce(c, kmh / 3.6, { mu, mass: m0, resist: Rz(kmh) }).F;      // what the tyres can actually put down, axle by axle
         const vLim = P.vOf(c, car.rpmMax * Math.PI / 30) * 3.6;
         const fPts = EV.sample((x) => (x > vLim ? null : F(x) / 1000), 0, 270, 270);
-        let vTop = 0; for (let x = 1; x <= Math.min(270, vLim); x += 0.5) if (Math.min(F(x), grip) >= Rz(x)) vTop = x;
-        let hill = 0; for (let g = 0; g <= 100; g += 0.5) if (Math.min(F(30), grip * Math.cos(Math.atan(g / 100))) >= P.roadLoad(car, { v: 30 / 3.6, grade: g / 100, mass: m0 }).total) hill = g;
-        const series = [{ name: 'Motors can deliver', color: 's3', pts: fPts, area: true, w: 2.5 }, { name: 'Resistance: air + tyres + hill', color: 's1', pts: EV.sample((x) => Rz(x) / 1000, 0, 270, 135) }];
+        let vTop = 0; for (let x = 1; x <= Math.min(270, vLim); x += 0.5) if (road(x) >= Rz(x)) vTop = x;
+        let hill = 0; for (let g = 0; g <= 100; g += 0.5) { const need = P.roadLoad(car, { v: 30 / 3.6, grade: g / 100, mass: m0 }).total; if (P.driveForce(c, 30 / 3.6, { mu: mu * Math.cos(Math.atan(g / 100)), mass: m0, resist: need }).F >= need) hill = g; }
+        const series = [{ name: 'Motors can deliver', color: 's3', pts: fPts, area: true, w: 2.5 }, { name: 'Tyres can transmit, axle by axle', color: 'ink', dash: true, w: 1.6, pts: EV.sample((x) => (x > vLim ? null : road(Math.max(x, 0.5)) / 1000), 0, 270, 270) }, { name: 'Resistance: air + tyres + hill', color: 's1', pts: EV.sample((x) => Rz(x) / 1000, 0, 270, 135) }];
         if (ts.ice) petrol(car).forEach((pts, i) => series.push({ name: i ? '' : 'Petrol car, gears 1–6', noLegend: i > 0, color: 'muted', w: 1.5, pts: pts.map(([x, y]) => [x, y / 1000]) }));
-        const fa = Math.min(F(ts.v), grip), sur = fa - Rz(ts.v);
+        const fa = road(Math.max(ts.v, 0.5)), sur = fa - Rz(ts.v), atLimit = vTop >= Math.min(270, vLim) - 1;
         tp.set({
           series, yMax: Math.max(8, Math.ceil(Math.max(F(0), grip) / 1000 * 1.12 / 2) * 2),
-          hlines: [{ y: grip / 1000, label: `grip limit, ${MU[ts.mu][0].toLowerCase()} road, ${car.drive}` }],
-          vlines: [{ x: ts.v }, { x: car.vMax, label: `software limit ${car.vMax} km/h`, color: 'muted', ly: 44 }].concat(vLim < 270 && Math.abs(vLim - car.vMax) > 8 ? [{ x: vLim, label: 'motor speed limit', color: 'muted', ly: 62 }] : []),
-          points: [{ x: ts.v, y: fa / 1000, color: 's3', label: `${fmt(fa / 1000, 1)} kN` }, { x: vTop, y: Rz(vTop) / 1000, color: 'ink', r: 4, label: `forces balance at ${fmt(vTop)} km/h`, dy: -12, align: 'left' }],
+          hlines: [{ y: grip / 1000, left: true, label: car.drive === 'AWD' ? `ideal grip limit, ${MU[ts.mu][0].toLowerCase()} road: μ × weight` : `grip limit of the rear tyres, ${MU[ts.mu][0].toLowerCase()} road` }],
+          vlines: [{ x: ts.v }, { x: car.vMax, label: `software limit ${car.vMax} km/h`, color: 'muted', ly: 46 }].concat(vLim < 270 && Math.abs(vLim - car.vMax) > 8 ? [{ x: vLim, label: atLimit ? '' : 'motor speed limit', color: 'muted', ly: 64 }] : []),
+          points: [{ x: ts.v, y: fa / 1000, color: 's3', label: `${fmt(fa / 1000, 1)} kN` }, { x: vTop, y: Rz(vTop) / 1000, color: 'ink', r: 4, label: atLimit ? `motor speed limit: ${fmt(vTop)} km/h` : `forces balance at ${fmt(vTop)} km/h`, dy: -12, align: 'left' }],
         });
-        TR({ a0: fmt(Math.min(F(0), grip) / (m0 * car.rot) / G, 2), a: fmt(Math.max(0, sur) / (m0 * car.rot) / G, 2), sur: fmt(sur / 1000, 1), vt: fmt(vTop), hill: fmt(hill), rpm: fmt(Math.round(P.wOf(c, ts.v / 3.6) * 30 / Math.PI / 10) * 10) });
+        TR({ a0: fmt(Math.max(0, road(0.5) - Rz(0.5)) / (m0 * car.rot) / G, 2), a: fmt(Math.max(0, sur) / (m0 * car.rot) / G, 2), sur: fmt(sur / 1000, 1), vt: fmt(vTop), hill: fmt(hill), rpm: fmt(Math.round(P.wOf(c, ts.v / 3.6) * 30 / Math.PI / 10) * 10) });
       }
       tUpd();
 
@@ -103,7 +104,7 @@
       const GR = EV.readouts(g.out, { f: ['Front axle load', 'kg'], r: ['Rear axle load', 'kg'], pc: ['Share on the rear', '%'], d: ['Load moved', 'kg'], rwd: ['Grip-limited launch, rear drive', 'g'], awd: ['Grip-limited launch, all-wheel drive', 'g'] });
       const gs = EV.controls(g.ctl, {
         a: { label: 'Brake (−) / accelerate (+)', min: -1.1, max: 1.0, step: 0.05, value: 0.5, unit: 'g' },
-        mu: { type: 'seg', label: 'Surface', options: [['1', 'Dry'], ['0.7', 'Wet'], ['0.3', 'Snow']], value: '1' },
+        mu: { type: 'seg', label: 'Surface', options: [['1', 'Dry'], ['0.8', 'Wet'], ['0.3', 'Snow']], value: '1' },
       }, gUpd);
       function gUpd() {
         const d = m0 * gs.a * car.cgH / car.wheelbase, fr = m0 * (1 - car.rearStatic) - d, re = m0 * car.rearStatic + d, mu = +gs.mu;

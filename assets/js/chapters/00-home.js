@@ -11,7 +11,7 @@
     { k: 'fdu', x: 793, y: 259, name: 'Front drive unit', ch: 'motor', awd: true,
       text: () => 'All-wheel-drive cars add an induction motor in front. It has no magnets, so when it is not needed it can be switched off and spin freely with almost no drag.' },
     { k: 'port', x: 88, y: 152, name: 'Charge port', ch: 'charging',
-      text: () => 'One socket, two routes. AC from a wallbox is converted to DC inside the car by the on-board charger (up to 11 kW). DC from a fast charger skips that and flows straight into the pack at up to 250 kW.' },
+      text: (c) => `One socket, two routes. AC from a wallbox is converted to DC inside the car by the on-board charger (up to 11 kW). DC from a fast charger skips that and flows straight into the pack at up to ${c.dcPeak} kW.` },
     { k: 'pcs', x: 342, y: 246, name: 'On-board charger and DC-DC', ch: 'inverter',
       text: () => 'A power-conversion box on top of the pack. One half rectifies grid AC into DC to charge the battery. The other half steps the pack voltage down to feed lights, computers and pumps.' },
     { k: 'hp', x: 856, y: 206, name: 'Heat pump', ch: 'thermal',
@@ -90,7 +90,7 @@
       <p>Strip away the screens and the software and an electric car does four things. It <em class="t">stores</em> energy chemically in a battery. It <em class="t">converts</em> that energy to motion through an inverter, a motor and a gearbox. It <em class="t">spends</em> the motion pushing air aside and flexing its tyres. And when you slow down it <em class="t">recovers</em> part of the motion back into the battery.</p>
       <p>Each of those steps is ordinary physics, and each has a price. The diagram follows one unit of energy from the wall socket to the road for the ${car.name} cruising at 110 km/h on a mild day.</p>
       <div data-fig="chain"></div>
-      <p>Two things stand out. First, <strong>${fmt(c.rl.total * c.v / wall * 100)}% of the electricity you pay for reaches the road</strong>; a petrol car manages about a quarter. Second, at this speed almost all of that useful energy is spent on one thing: air. Chapters 1 to 4 explain what the car must overcome, chapters 5 to 8 explain how it produces force, and chapters 9 to 12 put the pieces to work.</p>
+      <p>Two things stand out. First, <strong>${fmt(c.rl.total * c.v / wall * 100)}% of the electricity you pay for reaches the road</strong>; a petrol car manages about a quarter. Second, at this speed about ${fmt(c.rl.aero / c.rl.total * 100)}% of that useful energy is spent on one thing: air. Chapters 1 to 4 explain what the car must overcome, chapters 5 to 8 explain how it produces force, and chapters 9 to 12 put the pieces to work.</p>
 
       <h2><span class="n">THE EXAMPLE CAR</span>Three versions of the same machine</h2>
       <p>The guide uses the 2025-on Model Y in its three European trims. Pick one in the bar at the top and every number, graph and simulation on every page recalculates for it.</p>

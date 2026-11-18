@@ -24,7 +24,7 @@
   EV.chapter({
     id: 'aero', n: '3', title: 'Aerodynamics', color: 's1',
     blurb: 'Why the back of the car matters more than the front, and why drag area, not drag coefficient, is what the battery pays for.',
-    lead: 'Above about 80 km/h more than half of the energy at the wheels goes into stirring air. Understanding where that drag comes from explains the shape of every modern electric car.',
+    lead: 'Above roughly 80 to 90 km/h more than half of the energy at the wheels goes into stirring air. Understanding where that drag comes from explains the shape of every modern electric car.',
     html(car) {
       const q = (kmh) => 0.5 * P.rho() * (kmh / 3.6) ** 2;
       return `
@@ -38,7 +38,7 @@
       <h2><span class="n">3.1</span>Dynamic pressure: the weight of moving air</h2>
       <p>Air has mass, about ${fmt(P.rho(), 2)} kg in every cubic metre. Bring moving air to rest against a surface and its kinetic energy turns into pressure. That pressure is the <em class="t">dynamic pressure</em>:</p>
       ${eq(String.raw`q = \frac{1}{2} \rho v^2`, 'At 100 km/h: ½ × 1.20 × 27.8² = <b>' + fmt(q(100)) + ' Pa</b>. At 130 km/h: <b>' + fmt(q(130)) + ' Pa</b>.')}
-      <p>${fmt(q(100))} pascals is tiny, less than half a percent of atmospheric pressure. But it acts on the whole frontal area. If the car were a flat wall of ${car.area} m², the force would be ${M`q \cdot A = ${fmt(q(100) * car.area)} \text{ N}`} at 100 km/h. The <em class="t">drag coefficient</em> C<sub>d</sub> is simply the fraction of that wall-of-air force the real shape feels. For the Model Y it is ${car.cd}, so the force is ${fmt(q(100) * car.area * car.cd)} N.</p>
+      <p>${fmt(q(100))} pascals is tiny, less than half a percent of atmospheric pressure. But it acts on a large area. If the full dynamic pressure pressed on the whole ${car.area} m² frontal area, the force would be ${M`q \cdot A = ${fmt(q(100) * car.area)} \text{ N}`} at 100 km/h. That is the reference force. The <em class="t">drag coefficient</em> C<sub>d</sub> compares the real drag with it. A flat plate held face-on to the wind scores about 1.2, more than 1 because suction behind it adds to the pressure in front. The Model Y scores ${car.cd}, so its drag is ${fmt(q(100) * car.area * car.cd)} N.</p>
       ${eq(String.raw`F_{drag} = q \cdot C_d \cdot A = \frac{1}{2} \rho v^2 C_d A`)}
 
       <h2><span class="n">3.2</span>Where drag comes from</h2>
@@ -53,13 +53,13 @@
       <p>An electric car gets three of these almost for free. The battery makes the <strong>underbody</strong> a flat sealed plate. With no radiator to feed a hot engine, <strong>cooling drag</strong> shrinks and the front can be closed. And designers add <strong>wheel covers</strong> because rotating open wheels act like fans: Tesla's own figures put the covers at a few percent of range.</p>
 
       <h2><span class="n">3.3</span>Shape times size</h2>
-      <p>C<sub>d</sub> describes shape only. What enters the force equation is the product C<sub>d</sub>·A, the <em class="t">drag area</em>: the area of a flat plate, face-on, that would have roughly the same drag. The Model Y's is ${fmt(car.cd * car.area, 2)} m², a plate about ${fmt(Math.sqrt(car.cd * car.area) * 100)} cm square. Compare some typical vehicles, and what each needs to push through the air at 120 km/h.</p>
+      <p>C<sub>d</sub> describes shape only. What enters the force equation is the product C<sub>d</sub>·A, the <em class="t">drag area</em>: the frontal area an object with C<sub>d</sub> = 1 would need to have the same drag. The Model Y's is ${fmt(car.cd * car.area, 2)} m², a square about ${fmt(Math.sqrt(car.cd * car.area) * 100)} cm on a side. Compare some typical vehicles, and what each needs to push through the air at 120 km/h.</p>
       <div data-fig="cda"></div>
 
       <h2><span class="n">3.4</span>The air itself: temperature, altitude, wind</h2>
       <p>Drag is proportional to air density, and density follows the ideal gas law ${M`\rho = p / (R T)`}. Cold air is denser. Mountain air is thinner. Wind changes the speed that goes into ${M`v^2`}.</p>
       <div data-fig="air"></div>
-      <p>This is one of the three reasons winter range is shorter (the others are tyres and heating, in Chapters 4 and 11). At −10 °C the air is ${fmt((P.rho(-10) / P.rho(20) - 1) * 100)}% denser than at 20 °C, and so is the drag.</p>`;
+      <p>This is one of the four reasons winter range is shorter (the others are tyres, the battery itself and heating, in Chapters 4, 7 and 11). At −10 °C the air is ${fmt((P.rho(-10) / P.rho(20) - 1) * 100)}% denser than at 20 °C, and so is the drag.</p>`;
     },
 
     init(root, car) {

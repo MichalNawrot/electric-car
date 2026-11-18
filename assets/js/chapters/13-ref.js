@@ -33,7 +33,7 @@
     ]],
     ['Power electronics', 'inverter', [
       [String.raw`P = V I \quad\quad P_{loss} = I^2 R`, 'Electrical power, and heat in a conductor.'],
-      [String.raw`V_{avg} = D \cdot V_{dc} \quad\quad V = L \frac{dI}{dt}`, 'Average of a switched voltage with duty cycle D; why inductance smooths current.'],
+      [String.raw`V_{avg} = D \cdot V_{dc} \quad\quad V = L \frac{dI}{dt}`, 'Average of a switched voltage with duty cycle D, measured from the negative rail; why inductance smooths current.'],
     ]],
     ['Battery and charging', 'battery', [
       [String.raw`V = V_{oc} - I R \quad\quad P_{heat} = I^2 R`, 'Terminal voltage under load (I positive when discharging) and internal heating.'],
@@ -125,7 +125,7 @@
         <div class="card"><h4>Speed is height</h4><p>100 km/h is the energy of a 39 m drop; 130 km/h, 66 m.</p></div>
         <div class="card"><h4>μ ≈ 1 means 1 g</h4><p>Braking, cornering or accelerating: about 1 g on dry asphalt, 0.3 g on snow.</p></div>
         <div class="card"><h4>P = V·I, loss = I²R</h4><p>Double the voltage, quarter the wiring loss.</p></div>
-        <div class="card"><h4>Fast charging lives below 60%</h4><p>Peak power at low charge; the last 20% takes as long as the first 70%.</p></div>
+        <div class="card"><h4>Fast charging lives below 60%</h4><p>Peak power at low charge; the last 20% takes longer than the first 70%.</p></div>
         <div class="card"><h4>A heat pump moves 2–4× its work</h4><p>Limited by T_hot / (T_hot − T_cold); worse the colder it gets.</p></div>
       </div>
 
