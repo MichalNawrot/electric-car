@@ -11,7 +11,7 @@
 
   EV.chapter({
     id: 'battery', n: '7', title: 'The battery', color: 's1',
-    blurb: 'How lithium ions shuttle between two electrodes, why voltage sags under load, how 4,416 small cells become one pack, and what makes a battery age.',
+    blurb: 'How lithium ions shuttle between two electrodes, why voltage sags under load, how thousands of small cells become one pack, and what makes a battery age.',
     lead: 'The pack is the heaviest, most expensive and most misunderstood part of the car. Inside it there is no combustion and nothing moves except lithium ions, a few thousandths of a millimetre at a time.',
     html(car) {
       const V = car.s * car.cellV, R = P.packR(car), full = P.packAtPower(car, 0.8, car.pPeak / 0.93);
