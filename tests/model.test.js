@@ -63,6 +63,11 @@ check('LR 10-80 % DC charge time', P.chargeSession(lr, { from: 0.1, to: 0.8 }).m
 check('RWD 10-80 % DC charge time', P.chargeSession(V.rwd, { from: 0.1, to: 0.8 }).minutes, 22, 31, 'min');
 check('LR 0-100 % at 11 kW AC', P.chargeSession(lr, { from: 0, to: 1, ac: true }).minutes / 60, 7.3, 8.6, 'h');
 
+// --- regeneration
+check('LR regen power at 80 km/h is capped by the battery', P.regenForce(lr, 80 / 3.6, 2072).pBatt / 1000, 80, 86, 'kW');
+check('LR regen deceleration at 30 km/h', P.regenForce(lr, 30 / 3.6, 2072).F / 2072 / 9.81, 0.28, 0.31, 'g');
+check('regen limit on a cold battery', P.regenLimitW(lr, 0.6, -10) / 1000, 10, 30, 'kW');
+
 // --- climate
 check('heat pump COP at 0 C', P.copHeat(0).cop, 2.2, 3.1);
 check('heat pump COP at -20 C', P.copHeat(-20).cop, 1.3, 2.0);

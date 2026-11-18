@@ -8,13 +8,7 @@
   const stored = (car, p) => (p > 0 ? p - P.packAtPower(car, 0.6, -p).heat : 0);
   const drawn = (car, p) => (p > 0 ? p + P.packAtPower(car, 0.6, p).heat : p);
 
-  /** Most regenerative force the car will apply at the wheels (N) at speed v, and the battery power that results. */
-  function regenForce(car, v, mass, limitW) {
-    const cap = (car.drive === 'AWD' ? 0.3 : 0.25) * mass * G * clamp(v / 2, 0, 1);    // stability limit, fades out at walking pace
-    let F = cap, d = P.drivetrain(car, -F, v);
-    if (-d.Pel > limitW) { F *= limitW / (-d.Pel); d = P.drivetrain(car, -F, v); if (-d.Pel > limitW) { F *= limitW / (-d.Pel); d = P.drivetrain(car, -F, v); } }
-    return { F, pBatt: Math.max(0, -d.Pel) };
-  }
+  const regenForce = P.regenForce;
   /** Simulate one stop from v0 at constant deceleration a (m/s²). regen=false -> friction brakes only. */
   function stop(car, v0, a, o = {}) {
     const mass = car.curb + 75, mEff = mass * car.rot, dt = 0.02, limitW = o.limit == null ? car.regenMax : o.limit;

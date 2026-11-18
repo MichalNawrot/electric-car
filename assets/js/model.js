@@ -284,6 +284,22 @@
     return c.whkm > 0 ? e / c.whkm : Infinity;
   }
 
+  /* ------------------------------------------------------------- regeneration */
+  /** Battery power the pack will accept from regeneration (W): less when cold or nearly full. */
+  function regenLimitW(car, soc = 0.6, battTempC = 25) {
+    const cold = clamp(interp(DC_TEMP, battTempC) * 1.6, 0.05, 1);
+    const full = soc > 0.9 ? clamp((1 - soc) / 0.1, 0, 1) : 1;
+    return car.regenMax * cold * full;
+  }
+  /** Most regenerative braking the car will apply at speed v: wheel force (N) and resulting battery power (W). */
+  function regenForce(car, v, mass, limitW) {
+    const lim = limitW == null ? car.regenMax : limitW;
+    const cap = (car.drive === 'AWD' ? 0.3 : 0.25) * mass * G * clamp(v / 2, 0, 1);   // stability limit, fading out at walking pace
+    let F = cap, d = drivetrain(car, -F, v);
+    for (let i = 0; i < 2 && -d.Pel > lim; i++) { F *= lim / (-d.Pel); d = drivetrain(car, -F, v); }
+    return { F, pBatt: Math.max(0, -d.Pel) };
+  }
+
   /* -------------------------------------------------------------- acceleration */
   /**
    * Full-throttle run from rest. o: { mu, grade, payload, tempC, soc, tMax, vStop (m/s), gear }
@@ -346,6 +362,6 @@
   EV.phys = {
     G, clamp, lerp, interp, rho, crrTempFactor, roadLoad, wOf, vOf, torqueMax, motorLoss, motorEff, drivetrain,
     OCV, cellOcv, packOcv, packR, packAh, packAtPower, tempRFactor, DC_CURVE, DC_TEMP, chargePower, chargeSession,
-    copHeat, copCool, climate, usableTempFactor, consumption, range, accelRun, tractiveForce,
+    copHeat, copCool, climate, usableTempFactor, consumption, range, accelRun, tractiveForce, regenForce, regenLimitW,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -150,6 +150,7 @@
   EV.controls = (host, spec, onChange) => {
     const s = {}, setters = {};
     Object.entries(spec).forEach(([key, d]) => {
+      if (key === 'set') throw new Error('"set" is reserved: it is the method that changes a control from code');
       s[key] = d.value;
       const type = d.type || 'range';
       if (type === 'range') {
