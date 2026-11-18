@@ -22,7 +22,8 @@
     for (let v = Math.ceil(min / step - 1e-9) * step; v <= max + step * 1e-6; v += step) out.push(Math.abs(v) < step * 1e-9 ? 0 : v);
     return { step, vals: out };
   }
-  const decOf = (step) => (step >= 1 ? 0 : Math.min(4, Math.ceil(-Math.log10(step) - 1e-9) + (/25/.test(String(step)) ? 1 : 0)));
+  /** Decimals needed to print multiples of a tick step exactly (2.5 -> 1, 0.25 -> 2, 50 -> 0). */
+  const decOf = (step) => { const t = (+step.toPrecision(6)).toString(); return t.includes('e') ? 4 : Math.min(4, (t.split('.')[1] || '').length); };
 
   /** y at x by linear interpolation on sorted points; null outside the data or across gaps. */
   function yAt(pts, x) {
