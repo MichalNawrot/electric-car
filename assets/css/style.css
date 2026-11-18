@@ -138,6 +138,13 @@ button, input, select { font: inherit; color: inherit; }
 #top .crumb b { color: var(--ink-2); font-weight: 600; }
 #top .lbl { font-size: 12px; color: var(--muted); white-space: nowrap; }
 #menu { display: none; }
+#variant .sm { display: none; }
+@media (max-width: 640px) {
+  #variant .lg { display: none; }
+  #variant .sm { display: inline; }
+  #top .crumb { font-size: 12px; }
+  #top { gap: 8px; }
+}
 .iconbtn {
   width: 36px; height: 36px; display: inline-grid; place-items: center; border-radius: 9px;
   background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex: none;
@@ -198,6 +205,7 @@ sub, sup { line-height: 0; }
 
 /* math */
 math { font-family: var(--f-math); font-size: 1.08em; }
+td math[display="block"] { font-size: 1.3em; }
 .eq { display: block; margin: 18px 0; padding: 16px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-s); text-align: center; overflow-x: auto; }
 .eq math { font-size: 1.32em; }
 .eq .where { display: block; font-size: 13.5px; color: var(--muted); margin-top: 10px; font-family: var(--f-body); }

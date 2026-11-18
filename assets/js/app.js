@@ -75,7 +75,8 @@
   }
 
   /* chrome ---------------------------------------------------------------- */
-  const variantBox = EV.seg(Object.values(EV.variants).map((v) => [v.key, v.name]), EV.store.get('variant', 'lr'), (k) => { EV.store.set('variant', k); EV.setVariant(k); }, 'Model Y variant');
+  const SHORT = { rwd: 'RWD', lr: 'LR', perf: 'Perf' };
+  const variantBox = EV.seg(Object.values(EV.variants).map((v) => [v.key, `<span class="lg">${v.name}</span><span class="sm" aria-hidden="true">${SHORT[v.key]}</span>`]), EV.store.get('variant', 'lr'), (k) => { EV.store.set('variant', k); EV.setVariant(k); }, 'Model Y variant');
   $('#variant').appendChild(variantBox);
   EV.setVariant(EV.store.get('variant', 'lr'));
   EV.onVariant(() => { const y = window.scrollY; render(current, true); window.scrollTo(0, y); });
